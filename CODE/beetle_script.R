@@ -43,7 +43,7 @@ names(repeat.data)
 
 # (0) repeatability model
 repeatmodel <- lmer(length ~ 1 + (1|insectid), data = repeat.data)
-df.residual(repeatmodel, type = c("lmer"))
+df.residual(repeatmodel, type = c("lmer")) #this needs to be corrected, df can't be 4011
 summary(repeatmodel)
 
 # check residuals
@@ -89,7 +89,7 @@ ggplot(soilnfig.data, aes(distance, soild15N)) +
 
 # (1) soil model
 soilnmodel <- lmer(soild15N ~ distance*moisture + (1|transect), data = soiln.data)
-df.residual(soilnmodel, type = c("lmer"))
+df.residual(soilnmodel, type = c("lmer")) 
 summary(soilnmodel)
 
 # check for correlation between distance and moisture
@@ -108,8 +108,7 @@ qqline(as.vector(resid(soilnmodel)), col = "blue")
 # soil model coefficient plot
 library(sjPlot)
 plot_model(soilnmodel, type = "std2", colors = "bw", title = "soil δ15N") +
-  theme_classic() +
-  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
 # get the standardized coefficients: "std" = forest-plot of standardized beta values
 library(sjPlot)
@@ -153,7 +152,7 @@ ggplot(weevilbodynfig.data, aes(distance, bodyd15N)) +
   labs(x="Distance from the Kunsoot River (m)", 
        y = expression(paste("Curculionidae body δ"^"15"*"N"*" (‰)")))
 
-# (2) weevil body nutrients model
+# (2a) weevil body nutrients model
 weevilbodynmodel <- lmer(bodyd15N ~ distance + (1|transect), data = weevilbodyn.data)
 df.residual(weevilbodynmodel)
 
@@ -189,7 +188,7 @@ ggplot(carabidbodynfig.data, aes(group = distance, y = bodyd15N)) +
   labs(x="Distance from the Kunsoot River (m)", 
        y = expression(paste("Carabidae body δ"^"15"*"N"*" (‰)")))
 
-# (3) carabid body nutrients model
+# (2b) carabid body nutrients model
 carabidbodynmodel <- lmer(bodyd15N ~ distance + (1|transect), data = carabidbodyn.data)
 df.residual(carabidbodynmodel)
 
@@ -205,8 +204,7 @@ qqline(as.vector(resid(carabidbodynmodel)), col = "blue")
 # coefficient plot - no distance effect
 library(sjPlot)
 plot_model(carabidbodynmodel, type = "std2", colors = "bw", title = "body d15N") +
-  theme_classic() +
-  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
 # get standardized coefficients: "std" = forest-plot of standardized beta values
 library(sjPlot)
@@ -274,8 +272,7 @@ qqline(as.vector(resid(weevilsiamodel)), col = "blue")
 # coefficient plot - distance affects weevil body nutrients
 library(sjPlot)
 plot_model(weevilsiamodel, type = "std2", colors = "bw", title = "elytron length") +
-  theme_classic() +
-  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
 # get the standardized coefficients: "std" = forest-plot of standardized beta values
 library(sjPlot)
@@ -310,8 +307,7 @@ qqline(as.vector(resid(carabidsiamodel)), col = "blue")
 # coefficient plot
 library(sjPlot)
 plot_model(carabidsiamodel, type = "std2", colors = "bw", title = "elytron length") +
-  theme_classic() +
-  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
 # get standardized coefficients: "std" = forest-plot of standardized beta values
 library(sjPlot)
@@ -350,7 +346,11 @@ str(sexedcarabid.data)
 levels(sexedcarabid.data[,"species"]) # order is Z. matthewsii first (intercept)
 sexedcarabid.data$species = factor(sexedcarabid.data$species, levels(sexedcarabid.data$species)[c(6,1,2,3,4,5)])
 
-# (4) weevil body size model
+# (4a) weevil body size model (March 2020, include sampling round)
+weevilmodel <- lmer(median ~ distance*species + round + (1|transect), data = weevil.data)
+df.residual(weevilmodel)
+
+# OLD (4a) weevil body size model (December 2018)
 weevilmodel <- lmer(median ~ distance*species + (1|transect), data = weevil.data)
 df.residual(weevilmodel)
 
@@ -366,13 +366,16 @@ qqline(as.vector(resid(weevilmodel)), col = "blue")
 # coefficient plot for weevil model
 library(sjPlot)
 plot_model(weevilmodel, type = "std2", colors = "bw") +
-  theme_classic() +
-  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
 # standardized coefficients 
 get_model_data(weevilmodel, type = c("std"))
 
-# (5) carabid body size model (using sexed carabids n = 295)
+# (4b) carabid body size model (March 2020, including sampling round and sex as additive effects)
+carabidmodel <- lmer(median ~ distance*species + sex + round + (1|transect), data = sexedcarabid.data)
+df.residual(carabidmodel)
+
+# OLD (4b) carabid body size model (December 2018, using sexed carabids n = 295 for a 3-way interaction)
 carabidmodel <- lmer(median ~ distance*sex*species + (1|transect), data = sexedcarabid.data)
 df.residual(carabidmodel)
 
@@ -388,14 +391,12 @@ qqline(as.vector(resid(carabidmodel)), col = "blue")
 # coefficient plot 
 library(sjPlot)
 plot_model(carabidmodel, type = "std2", colors = "bw") +
-  theme_classic() +
-  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
 # standardized coefficients 
 get_model_data(carabidmodel, type = c("std"))
 
-
-#### 5. AD HOC (DISCUSSION) ####
+#### 5. POST HOC (DISCUSSION) ####
 
 # data - weevil body nutrients (n = 28) - note same dataframe as 2. BODY NUTRIENTS
 weevilbodyn.data <- read.csv(file.choose(), header = TRUE, ",")
@@ -425,7 +426,7 @@ ggplot(weevilbodyn.data, aes(bodyd15N, bodyncombust)) +
   labs(x = expression(paste("Curculionidae body δ"^"15"*"N"*" (‰)")), 
        y = "Body %N")
 
-# (5a) weevil ad hoc
+# (5a) weevil post hoc
 weeviladhocmodel <- lmer(bodyncombust ~ bodyd15N + (1|transect), data = weevilbodyn.data)
 df.residual(weeviladhocmodel)
 
@@ -441,14 +442,13 @@ qqline(as.vector(resid(weeviladhocmodel)), col = "blue")
 # coefficient plot 
 library(sjPlot)
 plot_model(weeviladhocmodel, type = "std2", colors = "bw", title = "body %N") +
-  theme_classic() +
-  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
 # get the standardized coefficients: "std" = forest-plot of standardized beta values
 library(sjPlot)
 get_model_data(weeviladhocmodel, type = c("std"), show.df = TRUE)         
 
-# (5b) carabid ad hoc
+# (5b) carabid post hoc
 carabidadhocmodel <- lmer(bodyncombust ~ bodyd15N + (1|transect), data = carabidbodyn.data)
 df.residual(carabidadhocmodel)
 
@@ -464,8 +464,7 @@ qqline(as.vector(resid(carabidadhocmodel)), col = "blue")
 # coefficient plot 
 library(sjPlot)
 plot_model(carabidadhocmodel, type = "std2", colors = "bw", title = "body %N") +
-  theme_classic() +
-  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
 # get the standardized coefficients: "std" = forest-plot of standardized beta values
 library(sjPlot)
