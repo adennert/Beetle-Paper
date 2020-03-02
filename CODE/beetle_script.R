@@ -1,6 +1,6 @@
 ####R Script for Beetle Paper
 ####Originally written in fall 2018 by NR; updated in spring 2020 by NR and AD
-####For submission to Ecology & Evolution
+####For submission to Ecology & Evolution -AD
 
 #### BELLA BELLA BEETLE ANALYSIS 2018 ####
 
