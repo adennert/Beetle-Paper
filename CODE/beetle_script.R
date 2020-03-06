@@ -41,12 +41,14 @@ library(bootpredictlme4)
 # data - repeatability (n = 1338 * 3 = 4014)
 repeat.data <- read.csv(file.choose(), header = TRUE, ",")
 View(repeat.data)
+str(repeat.data)
+summary(repeat.data)
 names(repeat.data)
 
 # (0) repeatability model
 repeatmodel <- lmer(length ~ 1 + (1|insectid), data = repeat.data)
-df.residual(repeatmodel, type = c("lmer")) #this needs to be corrected, df can't be 4011
 summary(repeatmodel)
+df.residual(repeatmodel, type = c("lmer")) #this needs to be corrected, df can't be 4011
 
 # check residuals
 ggplot(repeat.data, aes(x = fitted(repeatmodel), y = resid(repeatmodel))) +
@@ -69,12 +71,16 @@ VarCorr(repeatmodel)
 # data - soil (n = 30)
 soiln.data <- read.csv(file.choose(), header = TRUE, ",")
 View(soiln.data)
-str(soiln.data)
+str(soiln.data) #distance as an integer for the model 
 summary(soiln.data)
+names(soiln.data)
 
 soilnfig.data <- read.csv(file.choose(), header = TRUE, ",")
 soilnfig.data$distance <- as.factor(soilnfig.data$distance)
-str(soilnfig.data)
+View(soilnfig.data)
+str(soilnfig.data) #distance as a factor for the boxplot figure
+summary(soilnfig.data)
+names(soilnfig.data)
 
 # visualize raw soil data
 library(ggplot2)
@@ -91,8 +97,8 @@ ggplot(soilnfig.data, aes(distance, soild15N)) +
 
 # (1) soil model
 soilnmodel <- lmer(soild15N ~ distance*moisture + (1|transect), data = soiln.data)
-df.residual(soilnmodel, type = c("lmer")) 
 summary(soilnmodel)
+df.residual(soilnmodel, type = c("lmer")) 
 
 # check for correlation between distance and moisture
 cor(soiln.data$distance, soiln.data$moisture, method = c("pearson"))
@@ -116,7 +122,7 @@ sim <- simulateResiduals(fittedModel = soilnmodel, n = 500) # the calculated res
 # plot the scaled residuals (Observed vs Expected)
 plot(sim)
 # plot residuals against the other predictors
-plotResiduals(soiln.data$distance, sim$scaledResiduals) # appropriate for categorical variable?
+plotResiduals(soiln.data$distance, sim$scaledResiduals)
 plotResiduals(soiln.data$moisture, sim$scaledResiduals)
 # test outliers
 testOutliers(sim)
@@ -140,25 +146,37 @@ get_model_data(soilnmodel, type = c("std"), show.df = TRUE)
 # data - weevil body nutrients (n = 28)
 weevilbodyn.data <- read.csv(file.choose(), header = TRUE, ",")
 View(weevilbodyn.data)
+str(weevilbodyn.data) #distance as an integer for model
 summary(weevilbodyn.data)
+names(weevilbodyn.data)
 
 weevilbodynfig.data <- read.csv(file.choose(), header = TRUE, ",")
 weevilbodynfig.data$distance <- as.factor(weevilbodynfig.data$distance)
-str(weevilbodynfig.data)
+View(weevilbodynfig.data)
+str(weevilbodynfig.data) #distance as a factor for figure
+summary(weevilbodynfig.data)
+names(weevilbodynfig.data)
 
 # data - carabid body nutrients (n = 30)
 carabidbodyn.data <- read.csv(file.choose(), header = TRUE, ",")
 View(carabidbodyn.data)
+str(carabidbodyn.data) #distance as an integer for model
 summary(carabidbodyn.data)
+names(carabidbodyn.data)
 
 carabidbodynfig.data <- read.csv(file.choose(), header = TRUE, ",")
 carabidbodynfig.data$distance <- as.factor(carabidbodynfig.data$distance)
-str(carabidbodynfig.data)
+View(carabidbodynfig.data)
+str(carabidbodynfig.data) #distance as a factor for figure
+summary(carabidbodynfig.data)
+names(carabidbodynfig.data)
 
 # data - combined for figure
 bothbodynfig.data <- read.csv(file.choose(), header = TRUE, ",")
 bothbodynfig.data$distance <- as.factor(bothbodynfig.data$distance)
-str(bothbodynfig.data)
+View(bothbodynfig.data)
+str(bothbodynfig.data) #distance as factor for figure (once run ^ as.factor)
+names(bothbodynfig.data)
 
 # visualize raw weevil data 
 library(ggplot2)
@@ -174,7 +192,8 @@ ggplot(weevilbodynfig.data, aes(distance, bodyd15N)) +
        y = expression(paste("Curculionidae body δ"^"15"*"N"*" (‰)")))
 
 # (2a) weevil body nutrients model
-weevilbodynmodel <- lmer(bodyd15N ~ distance + (1|transect), data = weevilbodyn.data)
+weevilbodynmodel <- lmer(bodyd15N ~ distance + (1|transect), data = weevilbodyn.data) # singular fit message because only 2 T5s and 2T7s (all others have 3 each)
+summary(weevilbodynmodel)
 df.residual(weevilbodynmodel)
 
 # check residuals
@@ -215,7 +234,7 @@ get_model_data(weevilbodynmodel, type = c("std"), show.df = TRUE)
 
 # visualize raw carabid data 
 library(ggplot2)
-ggplot(carabidbodynfig.data, aes(group = distance, y = bodyd15N)) +
+ggplot(carabidbodynfig.data, aes(distance, bodyd15N)) +
   stat_boxplot() + theme_classic() +
   theme(text = element_text(size = 16)) +
   theme(axis.text.x = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
@@ -228,6 +247,7 @@ ggplot(carabidbodynfig.data, aes(group = distance, y = bodyd15N)) +
 
 # (2b) carabid body nutrients model
 carabidbodynmodel <- lmer(bodyd15N ~ distance + (1|transect), data = carabidbodyn.data)
+summary(carabidbodynmodel)
 df.residual(carabidbodynmodel)
 
 # check residuals
@@ -286,17 +306,23 @@ ggplot(bothbodynfig.data, aes(distance, bodyd15N, fill = species)) +
 # data - weevil SIA body size (average of 3 individuals) (n = 28)
 weevilsia.data <- read.csv(file.choose(), header = TRUE, ",")
 View(weevilsia.data)
+str(weevilsia.data) 
 summary(weevilsia.data)
+names(weevilsia.data)
 
 # data - carabid SIA body size (1 indiv. per sample) (n = 30)
 carabidsia.data <- read.csv(file.choose(), header = TRUE, ",")
 View(carabidsia.data)
+str(carabidsia.data) 
 summary(carabidsia.data)
+names(carabidsia.data)
 
 # data - both combined for figure
 bothsia.data <- read.csv(file.choose(), header = TRUE, ",")
 View(bothsia.data)
+str(bothsia.data) 
 summary(bothsia.data)
+names(bothsia.data)
 
 # visualize raw weevil data 
 library(ggplot2)
@@ -313,6 +339,7 @@ ggplot(weevilsia.data, aes(bodyd15N, avglength)) +
 
 # (3a) weevil sia model
 weevilsiamodel <- lmer(avglength ~ bodyd15N + (1|transect), data = weevilsia.data)
+summary(weevilsiamodel)
 df.residual(weevilsiamodel)
 
 # check residuals
@@ -365,6 +392,7 @@ ggplot(carabidsia.data, aes(bodyd15N, medianelytronlength)) +
 
 # (3b) carabid sia model
 carabidsiamodel <- lmer(medianelytronlength ~ bodyd15N + (1|Transect), data = carabidsia.data)
+summary(carabidsiamodel)
 df.residual(carabidsiamodel)
 
 # check residuals
@@ -424,7 +452,9 @@ ggplot(bothsia.data, aes(bodyd15N, median, color = species)) +
 # data - weevils (n = 1011)
 weevil.data <- read.csv(file.choose(), header = TRUE, ",")
 View(weevil.data)
-str(weevil.data)
+str(weevil.data) 
+summary(weevil.data)
+names(weevil.data)
 levels(weevil.data[,"species"]) # make sure order is S. tuberosus first (intercept)
 weevil.data$species = factor(weevil.data$species, levels(weevil.data$species)[c(3,1,2)])
 
@@ -432,15 +462,19 @@ weevil.data$species = factor(weevil.data$species, levels(weevil.data$species)[c(
 sexedcarabid.data <- read.csv(file.choose(), header = TRUE, ",")
 View(sexedcarabid.data)
 str(sexedcarabid.data)
+summary(sexedcarabid.data)
+names(sexedcarabid.data)
 levels(sexedcarabid.data[,"species"]) # order is Z. matthewsii first (intercept)
 sexedcarabid.data$species = factor(sexedcarabid.data$species, levels(sexedcarabid.data$species)[c(6,1,2,3,4,5)])
 
 # (4a) weevil body size model (March 2020, include sampling round)
 weevilmodel <- lmer(median ~ distance*species + round + (1|transect), data = weevil.data)
+summary(weevilmodel)
 df.residual(weevilmodel)
 
 # OLD (4a) weevil body size model (December 2018)
 weevilmodel <- lmer(median ~ distance*species + (1|transect), data = weevil.data)
+summary(weevilmodel)
 df.residual(weevilmodel)
 
 # check residuals
@@ -481,10 +515,12 @@ get_model_data(weevilmodel, type = c("std"))
 
 # (4b) carabid body size model (March 2020, including sampling round and sex as additive effects)
 carabidmodel <- lmer(median ~ distance*species + sex + round + (1|transect), data = sexedcarabid.data)
+summary(carabidmodel)
 df.residual(carabidmodel)
 
 # OLD (4b) carabid body size model (December 2018, using sexed carabids n = 295 for a 3-way interaction)
 carabidmodel <- lmer(median ~ distance*sex*species + (1|transect), data = sexedcarabid.data)
+summary(carabidmodel)
 df.residual(carabidmodel)
 
 # check residuals
@@ -529,17 +565,23 @@ get_model_data(carabidmodel, type = c("std"))
 # data - weevil body nutrients (n = 28) - note same dataframe as 2. BODY NUTRIENTS
 weevilbodyn.data <- read.csv(file.choose(), header = TRUE, ",")
 View(weevilbodyn.data)
+str(weevilbodyn.data)
+summary(weevilbodyn.data)
 names(weevilbodyn.data)
 
 # data - carabid body nutrients (n = 30) - note same dataframe as 2. BODY NUTRIENTS
 carabidbodyn.data <- read.csv(file.choose(), header = TRUE, ",")
 View(carabidbodyn.data)
+str(carabidbodyn.data)
+summary(carabidbodyn.data)
 names(carabidbodyn.data)
 
 # data - combined for figure - note same dataframe as 2. BODY NUTRIENTS except don't want distance as a factor
 bothbodynfig.data <- read.csv(file.choose(), header = TRUE, ",")
-View(bothbodyn.data)
-str(bothbodyn.data)
+View(bothbodynfig.data)
+str(bothbodynfig.data)
+summary(bothbodynfig.data)
+names(bothbodynfig.data)
 
 # visualize raw weevil data 
 library(ggplot2)
@@ -556,6 +598,7 @@ ggplot(weevilbodyn.data, aes(bodyd15N, bodyncombust)) +
 
 # (5a) weevil post hoc
 weevilposthocmodel <- lmer(bodyncombust ~ bodyd15N + (1|transect), data = weevilbodyn.data)
+summary(weevilposthocmodel)
 df.residual(weeviladhocmodel)
 
 # check residuals
@@ -595,6 +638,7 @@ get_model_data(weevilposthocmodel, type = c("std"), show.df = TRUE)
 
 # (5b) carabid post hoc
 carabidposthocmodel <- lmer(bodyncombust ~ bodyd15N + (1|transect), data = carabidbodyn.data)
+summary(carabidposthocmodel)
 df.residual(carabidposthocmodel)
 
 # check residuals
@@ -647,6 +691,3 @@ ggplot(bothbodynfig.data, aes(bodyd15N, bodyncombust, color = species)) +
   theme(legend.text = element_text(size = 14, face = "italic")) +
   labs(x = expression(paste("Body δ"^"15"*"N"*" (‰)")), 
        y = "Body N (%)")
-
-
-
