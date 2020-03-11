@@ -71,7 +71,8 @@ ggplot() +
   theme(panel.grid.minor = element_line(colour = NA),
         panel.grid.major = element_line(colour = NA),
         axis.title.y = element_blank(), axis.title.x = element_blank(),
-        axis.text.y = element_text(size=10), axis.text.x = element_text(size=10)) +
+        axis.text.y = element_text(size=10), axis.text.x = element_text(size=10),
+        legend.position = "none") +
   ggsn::scalebar(BC.df, dist = 1, transform = TRUE, model = "WGS84",
                  dist_unit = "km", location = "bottomright", st.bottom = FALSE,
                  st.dist = 0.03, border.size = 0.5, 
