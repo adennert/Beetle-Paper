@@ -1,11 +1,6 @@
 ####R Script for Beetle Paper
 ####Originally written in fall 2018 by NR; updated in spring 2020 by NR and AD
-####For submission to Ecology & Evolution -AD
-
-#this is a new test by NR
-#Got your test!
-
-#### BELLA BELLA BEETLE ANALYSIS 2018 ####
+####For submission to Ecology & Evolution
 
 #### Libraries ####
 
@@ -38,11 +33,11 @@ devtools::install_github("remkoduursma/bootpredictlme4")
 library(bootpredictlme4)
 
 
-#### DECEMBER 2018 NEW ANALYSIS ####
 #### 0. REPEATABILITY ####
 
 # data - repeatability (n = 1338 * 3 = 4014)
-repeat.data <- read.csv(file.choose(), header = TRUE, ",")
+repeat.data <- read.csv("DATA/0 - repeat.data .csv", header = TRUE, ",", 
+                        strip.white = TRUE)
 View(repeat.data)
 str(repeat.data)
 summary(repeat.data)
@@ -72,23 +67,19 @@ VarCorr(repeatmodel)
 #### 1. SOIL NUTRIENTS ####
 
 # data - soil (n = 30)
-soiln.data <- read.csv(file.choose(), header = TRUE, ",")
+soiln.data <- read.csv("DATA/1 - soiln.data.csv", header = TRUE, ",", 
+                       strip.white = TRUE)
 View(soiln.data)
 str(soiln.data) #distance as an integer for the model 
+soiln.data$distance <- as.factor(soiln.data$distance)
+soiln.data$distance <- ordered(soiln.data$distance)
 summary(soiln.data)
 names(soiln.data)
 
-soilnfig.data <- read.csv(file.choose(), header = TRUE, ",")
-soilnfig.data$distance <- as.factor(soilnfig.data$distance)
-View(soilnfig.data)
-str(soilnfig.data) #distance as a factor for the boxplot figure
-summary(soilnfig.data)
-names(soilnfig.data)
-
 # visualize raw soil data
 library(ggplot2)
-ggplot(soilnfig.data, aes(distance, soild15N)) +
-  stat_boxplot(geom = "boxplot") + theme_classic() + 
+ggplot(soiln.data, aes(distance, soild15N)) +
+  geom_point() + theme_classic() + 
   theme(text = element_text(size = 16)) +
   theme(axis.text.x = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
@@ -99,7 +90,9 @@ ggplot(soilnfig.data, aes(distance, soild15N)) +
        y = expression(paste("Soil δ"^"15"*"N"*" (‰)")))
 
 # (1) soil model
-soilnmodel <- lmer(soild15N ~ distance*moisture + (1|transect), data = soiln.data)
+# cannot include ranom effect of transect due to singularity issues
+soilnmodel <- lm(soild15N ~ distance * moisture, data = soiln.data)
+
 summary(soilnmodel)
 df.residual(soilnmodel, type = c("lmer")) 
 
@@ -142,6 +135,22 @@ plot_model(soilnmodel, type = "std2", colors = "bw", title = "soil δ15N") +
 # get the standardized coefficients: "std" = forest-plot of standardized beta values
 library(sjPlot)
 get_model_data(soilnmodel, type = c("std"), show.df = TRUE)
+
+# visualize raw data points with model expecations on top
+soiln.data$modelexp <- predict(soilnmodel, type = "response")
+newdat.area$lwr <- pred.rich.area$fit - 1.96 * pred.rich.area$se.fit
+newdat.area$upr <- pred.rich.area$fit + 1.96 * pred.rich.area$se.fit
+
+ggplot(soiln.data, aes(distance, soild15N)) +
+  geom_point() + theme_classic() + 
+  theme(text = element_text(size = 16)) +
+  theme(axis.text.x = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.text.y = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  coord_cartesian(ylim = c(0, 12)) +
+  labs(x="Distance from the Kunsoot River (m)", 
+       y = expression(paste("Soil δ"^"15"*"N"*" (‰)")))
 
 
 #### 2. BODY NUTRIENTS ####
