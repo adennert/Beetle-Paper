@@ -3,7 +3,7 @@
 ####For submission to Ecology & Evolution -AD
 
 #this is a new test by NR
-#Got your test!
+#Got your test! 
 
 #### BELLA BELLA BEETLE ANALYSIS 2018 ####
 
@@ -139,13 +139,55 @@ library(sjPlot)
 plot_model(soilnmodel, type = "std2", colors = "bw", title = "soil δ15N") +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
-# get the standardized coefficients: "std" = forest-plot of standardized beta values
-library(sjPlot)
-get_model_data(soilnmodel, type = c("std"), show.df = TRUE)
-
-
 #### 2. BODY NUTRIENTS ####
 
+##NEW DATASET 2020
+# data - sia
+sia.data <- read.csv(file.choose(), header = TRUE, ",") #change this to direct method
+View(sia.data)
+str(sia.data) 
+summary(sia.data)
+names(sia.data)
+
+##NEW MODEL 2020
+# body nutrients model
+bodynmodel <- lmer(bodyd15N ~ distance + trophic + (1|transect), data = sia.data)
+summary(bodynmodel)
+
+# check residuals
+ggplot(sia.data, aes(x = fitted(bodynmodel), y = resid(bodynmodel))) +
+  geom_point() +
+  theme_classic() +
+  geom_line(y=0, colour="red") +
+  labs(x="Fitted values", y= "Residuals")
+qqnorm(as.vector(resid(bodynmodel)))
+qqline(as.vector(resid(bodynmodel)), col = "blue")
+
+##USING DHARMa PACKAGE TO INTERPRET RESIDUALS 2020
+# set simulations constant 
+set.seed(1)
+# calculate scaled residuals
+library(DHARMa)
+sim <- simulateResiduals(fittedModel = bodynmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
+# plot the scaled residuals (Observed vs Expected)
+plot(sim)
+# plot residuals against the other predictors
+plotResiduals(sia.data$distance, sim$scaledResiduals) 
+plotResiduals(sia.data$trophic, sim$scaledResiduals) 
+# test outliers
+testOutliers(sim)
+# test dispersion 
+testDispersion(sim)
+# shows QQ plot, dispersion, outliers in 1 plot
+testResiduals(sim)
+
+# coefficient plot - distance affects weevil body nutrients
+library(sjPlot)
+plot_model(bodynmodel, type = "std2", colors = "bw", title = "body d15N") +
+  theme_classic() +
+  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+
+##OLD DATASETS 2018
 # data - weevil body nutrients (n = 28)
 weevilbodyn.data <- read.csv(file.choose(), header = TRUE, ",")
 View(weevilbodyn.data)
@@ -194,6 +236,7 @@ ggplot(weevilbodynfig.data, aes(distance, bodyd15N)) +
   labs(x="Distance from the Kunsoot River (m)", 
        y = expression(paste("Curculionidae body δ"^"15"*"N"*" (‰)")))
 
+## OLD MODELS 2018
 # (2a) weevil body nutrients model
 weevilbodynmodel <- lmer(bodyd15N ~ distance + (1|transect), data = weevilbodyn.data) # singular fit message because only 2 T5s and 2T7s (all others have 3 each)
 summary(weevilbodynmodel)
@@ -230,10 +273,6 @@ library(sjPlot)
 plot_model(weevilbodynmodel, type = "std2", colors = "bw", title = "body d15N") +
   theme_classic() +
   geom_hline(yintercept = 0, lty = 2, colour = "gray")
-
-# get standardized coefficients: "std" = forest-plot of standardized beta values
-library(sjPlot)
-get_model_data(weevilbodynmodel, type = c("std"), show.df = TRUE)
 
 # visualize raw carabid data 
 library(ggplot2)
@@ -284,10 +323,6 @@ library(sjPlot)
 plot_model(carabidbodynmodel, type = "std2", colors = "bw", title = "body d15N") +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
-# get standardized coefficients: "std" = forest-plot of standardized beta values
-library(sjPlot)
-get_model_data(carabidbodynmodel, type = c("std"), show.df = TRUE)
-
 # see both weevils and carabids together for plot
 library(ggplot2)
 ggplot(bothbodynfig.data, aes(distance, bodyd15N, fill = species)) +
@@ -304,8 +339,55 @@ ggplot(bothbodynfig.data, aes(distance, bodyd15N, fill = species)) +
   labs(x="Distance from the Kunsoot River (m)", 
        y = expression(paste("Body δ"^"15"*"N"*" (‰)")))
 
-
 #### 3. SIA body subset ####
+
+##NEW DATASET 2020
+# data - sia
+sia.data <- read.csv(file.choose(), header = TRUE, ",") #change this to direct method
+View(sia.data)
+str(sia.data) 
+summary(sia.data)
+names(sia.data)
+
+##NEW MODEL 2020
+# sia model
+siamodel <- lmer(median ~ bodyd15N + trophic + (1|transect), data = sia.data) 
+summary(siamodel)
+
+# check residuals
+ggplot(sia.data, aes(x = fitted(siamodel), y = resid(siamodel))) +
+  geom_point() +
+  theme_classic() +
+  geom_line(y=0, colour="red") +
+  labs(x="Fitted values", y= "Residuals")
+qqnorm(as.vector(resid(siamodel)))
+qqline(as.vector(resid(siamodel)), col = "blue")
+
+##USING DHARMa PACKAGE TO INTERPRET RESIDUALS 2020
+# set simulations constant 
+set.seed(1)
+# calculate scaled residuals
+library(DHARMa)
+sim <- simulateResiduals(fittedModel = siamodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
+# plot the scaled residuals (Observed vs Expected)
+plot(sim)
+# plot residuals against the other predictors
+plotResiduals(sia.data$bodyd15N, sim$scaledResiduals) 
+plotResiduals(sia.data$trophic, sim$scaledResiduals) 
+# test outliers
+testOutliers(sim)
+# test dispersion 
+testDispersion(sim)
+# shows QQ plot, dispersion, outliers in 1 plot
+testResiduals(sim)
+
+# coefficient plot - trophic affect body size but not body d15N
+library(sjPlot)
+plot_model(siamodel, type = "std2", colors = "bw", title = "body size") +
+  theme_classic() +
+  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+
+##OLD DATASETS 2018
 # data - weevil SIA body size (average of 3 individuals) (n = 28)
 weevilsia.data <- read.csv(file.choose(), header = TRUE, ",")
 View(weevilsia.data)
@@ -340,6 +422,7 @@ ggplot(weevilsia.data, aes(bodyd15N, avglength)) +
   labs(x = expression(paste("Curculionidae body δ"^"15"*"N"*" (‰)")), 
        y = "Elytron length (mm)")
 
+##OLD MODELS 2018
 # (3a) weevil sia model
 weevilsiamodel <- lmer(avglength ~ bodyd15N + (1|transect), data = weevilsia.data)
 summary(weevilsiamodel)
@@ -375,10 +458,6 @@ testResiduals(sim)
 library(sjPlot)
 plot_model(weevilsiamodel, type = "std2", colors = "bw", title = "elytron length") +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
-
-# get the standardized coefficients: "std" = forest-plot of standardized beta values
-library(sjPlot)
-get_model_data(weevilsiamodel, type = c("std"), show.df = TRUE)         
 
 # visualize raw carabid data 
 library(ggplot2)
@@ -429,10 +508,6 @@ library(sjPlot)
 plot_model(carabidsiamodel, type = "std2", colors = "bw", title = "elytron length") +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
-# get standardized coefficients: "std" = forest-plot of standardized beta values
-library(sjPlot)
-get_model_data(carabidsiamodel, type = c("std"), show.df = TRUE)
-
 # see together for plot
 library(ggplot2)
 ggplot(bothsia.data, aes(bodyd15N, median, color = species)) +
@@ -449,13 +524,64 @@ ggplot(bothsia.data, aes(bodyd15N, median, color = species)) +
   labs(x = expression(paste("Body δ"^"15"*"N"*" (‰)")), 
        y = "Elytron length (mm)")
 
-
 #### 4. BODY SIZE ####
 
+##NEW DATASET 2020
+# data - bodysize
+bodysize.data <- read.csv(file.choose(), header = TRUE, ",") #change this to direct method
+View(bodysize.data)
+str(bodysize.data) 
+summary(bodysize.data)
+names(bodysize.data)
+
+##NEW MODEL 2020
+# bodysize model
+bodysizemodel <- lmer(median ~ distance*species + trophic + sex + round + (1|transect), 
+                      data = bodysize.data)
+summary(bodysizemodel)
+
+# check residuals
+ggplot(bodysize.data, aes(x = fitted(bodysizemodel), y = resid(bodysizemodel))) +
+  geom_point() +
+  theme_classic() +
+  geom_line(y=0, colour="red") +
+  labs(x="Fitted values", y= "Residuals")
+qqnorm(as.vector(resid(bodysizemodel)))
+qqline(as.vector(resid(bodysizemodel)), col = "blue")
+
+##USING DHARMa PACKAGE TO INTERPRET RESIDUALS 2020
+# set simulations constant 
+set.seed(1)
+# calculate scaled residuals
+library(DHARMa)
+sim <- simulateResiduals(fittedModel = bodysizemodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
+# plot the scaled residuals (Observed vs Expected)
+plot(sim)
+# plot residuals against the other predictors
+plotResiduals(bodysize.data$distance, sim$scaledResiduals) 
+plotResiduals(bodysize.data$species, sim$scaledResiduals) 
+plotResiduals(bodysize.data$trophic, sim$scaledResiduals)
+plotResiduals(bodysize.data$sex, sim$scaledResiduals)
+plotResiduals(bodysize.data$round, sim$scaledResiduals)
+# test outliers
+testOutliers(sim)
+# test dispersion 
+testDispersion(sim)
+# shows QQ plot, dispersion, outliers in 1 plot
+testResiduals(sim)
+
+# coefficient plot - trophic affect body size but not body d15N
+library(sjPlot)
+plot_model(bodysizemodel, type = "std2", colors = "bw", title = "body size") +
+  theme_classic() +
+  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+
+##OLD DATASETS 2018
 # data - weevils (n = 1011)
 weevil.data <- read.csv(file.choose(), header = TRUE, ",")
 View(weevil.data)
 str(weevil.data) 
+weevil.data$round <- ordered(weevil.data$round, levels = 1:4) #round as ordinal 
 summary(weevil.data)
 names(weevil.data)
 levels(weevil.data[,"species"]) # make sure order is S. tuberosus first (intercept)
@@ -470,6 +596,7 @@ names(sexedcarabid.data)
 levels(sexedcarabid.data[,"species"]) # order is Z. matthewsii first (intercept)
 sexedcarabid.data$species = factor(sexedcarabid.data$species, levels(sexedcarabid.data$species)[c(6,1,2,3,4,5)])
 
+##OLD MODELS 2018
 # (4a) weevil body size model (March 2020, include sampling round)
 weevilmodel <- lmer(median ~ distance*species + round + (1|transect), data = weevil.data)
 summary(weevilmodel)
@@ -512,9 +639,6 @@ testResiduals(sim)
 library(sjPlot)
 plot_model(weevilmodel, type = "std2", colors = "bw") +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
-
-# standardized coefficients 
-get_model_data(weevilmodel, type = c("std"))
 
 # (4b) carabid body size model (March 2020, including sampling round and sex as additive effects)
 carabidmodel <- lmer(median ~ distance*species + sex + round + (1|transect), data = sexedcarabid.data)
@@ -560,11 +684,56 @@ library(sjPlot)
 plot_model(carabidmodel, type = "std2", colors = "bw") +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
-# standardized coefficients 
-get_model_data(carabidmodel, type = c("std"))
-
 #### 5. POST HOC (DISCUSSION) ####
 
+##NEW DATASET 2020
+# data - sia
+sia.data <- read.csv(file.choose(), header = TRUE, ",") #change this to direct method
+View(sia.data)
+str(sia.data) 
+summary(sia.data)
+names(sia.data)
+
+##NEW MODEL 2020
+# post hoc model
+posthocmodel <- lmer(bodyncombust ~ bodyd15N + trophic + (1|transect), data = sia.data)
+summary(posthocmodel)
+
+# check residuals
+ggplot(sia.data, aes(x = fitted(posthocmodel), y = resid(posthocmodel))) +
+  geom_point() +
+  theme_classic() +
+  geom_line(y=0, colour="red") +
+  labs(x="Fitted values", y= "Residuals")
+qqnorm(as.vector(resid(posthocmodel)))
+qqline(as.vector(resid(posthocmodel)), col = "blue")
+
+##USING DHARMa PACKAGE TO INTERPRET RESIDUALS 2020
+# set simulations constant 
+set.seed(1)
+# calculate scaled residuals
+library(DHARMa)
+sim <- simulateResiduals(fittedModel = posthocmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
+# plot the scaled residuals (Observed vs Expected)
+plot(sim)
+# plot residuals against the other predictors
+plotResiduals(sia.data$bodyd15N, sim$scaledResiduals) 
+plotResiduals(sia.data$trophic, sim$scaledResiduals) 
+# test outliers
+testOutliers(sim)
+# test dispersion 
+testDispersion(sim)
+# shows QQ plot, dispersion, outliers in 1 plot
+testResiduals(sim)
+
+# coefficient plot - distance affects weevil body nutrients
+library(sjPlot)
+plot_model(posthocmodel, type = "std2", colors = "bw", title = "body %N") +
+  theme_classic() +
+  geom_hline(yintercept = 0, lty = 2, colour = "gray")
+
+
+##OLD DATASETS 2018
 # data - weevil body nutrients (n = 28) - note same dataframe as 2. BODY NUTRIENTS
 weevilbodyn.data <- read.csv(file.choose(), header = TRUE, ",")
 View(weevilbodyn.data)
@@ -599,6 +768,7 @@ ggplot(weevilbodyn.data, aes(bodyd15N, bodyncombust)) +
   labs(x = expression(paste("Curculionidae body δ"^"15"*"N"*" (‰)")), 
        y = "Body %N")
 
+##OLD MODELS 2018
 # (5a) weevil post hoc
 weevilposthocmodel <- lmer(bodyncombust ~ bodyd15N + (1|transect), data = weevilbodyn.data)
 summary(weevilposthocmodel)
@@ -635,10 +805,6 @@ library(sjPlot)
 plot_model(weevilposthocmodel, type = "std2", colors = "bw", title = "body %N") +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
-# get the standardized coefficients: "std" = forest-plot of standardized beta values
-library(sjPlot)
-get_model_data(weevilposthocmodel, type = c("std"), show.df = TRUE)         
-
 # (5b) carabid post hoc
 carabidposthocmodel <- lmer(bodyncombust ~ bodyd15N + (1|transect), data = carabidbodyn.data)
 summary(carabidposthocmodel)
@@ -674,10 +840,6 @@ testResiduals(sim)
 library(sjPlot)
 plot_model(carabidposthocmodel, type = "std2", colors = "bw", title = "body %N") +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
-
-# get the standardized coefficients: "std" = forest-plot of standardized beta values
-library(sjPlot)
-get_model_data(carabidposthocmodel, type = c("std"), show.df = TRUE)         
 
 # see together for plot
 library(ggplot2)
