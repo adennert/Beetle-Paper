@@ -91,7 +91,7 @@ ggplot(soiln.data, aes(distance, soild15N)) +
        y = expression(paste("Soil δ"^"15"*"N"*" (‰)")))
 
 # (1) soil model
-# cannot include ranom effect of transect due to singularity issues
+# cannot include random effect of transect due to singularity issues
 soilnmodel <- lm(soild15N ~ distance * moisture, data = soiln.data)
 
 summary(soilnmodel)
