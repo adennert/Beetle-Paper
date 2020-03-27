@@ -68,14 +68,13 @@ VarCorr(repeatmodel)
 #### 1. SOIL NUTRIENTS ####
 
 # data - soil (n = 30)
-soiln.data <- read.csv("DATA/1 - soiln.data.csv", header = TRUE, ",", 
+soiln.data <- read.csv("DATA/(1) soiln.csv", header = TRUE, ",", 
                        strip.white = TRUE)
 View(soiln.data)
 str(soiln.data) #distance as an integer for the model 
-soiln.data$distance <- as.factor(soiln.data$distance)
-soiln.data$distance <- ordered(soiln.data$distance)
 summary(soiln.data)
 names(soiln.data)
+levels(soiln.data$transect)
 
 # visualize raw soil data
 library(ggplot2)
@@ -92,10 +91,14 @@ ggplot(soiln.data, aes(distance, soild15N)) +
 
 # (1) soil model
 # cannot include random effect of transect due to singularity issues
-soilnmodel <- lm(soild15N ~ distance * moisture, data = soiln.data)
+# must standardize these variables as they are both continuous with differing
+#variance, range, and units
+soiln.data$distance.std <- scale(soiln.data$distance, center = TRUE, scale = TRUE)
+soiln.data$moisture.std <- scale(soiln.data$moisture, center = TRUE, scale = TRUE)
 
+# create the standardized soil model
+soilnmodel <- lm(soild15N ~ distance.std * moisture.std, data = soiln.data)
 summary(soilnmodel)
-df.residual(soilnmodel, type = c("lmer")) 
 
 # check for correlation between distance and moisture
 cor(soiln.data$distance, soiln.data$moisture, method = c("pearson"))
@@ -115,35 +118,35 @@ qqline(as.vector(resid(soilnmodel)), col = "blue")
 set.seed(1)
 # calculate scaled residuals
 library(DHARMa)
-sim <- simulateResiduals(fittedModel = soilnmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
-# plot the scaled residuals (Observed vs Expected)
-plot(sim)
+sim <- simulateResiduals(fittedModel = soilnmodel, n = 500) 
+# the calculated residuals are stored in sim$scaledResiduals
 # plot residuals against the other predictors
 plotResiduals(soiln.data$distance, sim$scaledResiduals)
 plotResiduals(soiln.data$moisture, sim$scaledResiduals)
-# test outliers
-testOutliers(sim)
-# test dispersion 
-testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# soil model coefficient plot
+# soil model coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(soilnmodel, type = "std2", colors = "bw", title = "soil δ15N") +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
-
-# get the standardized coefficients: "std" = forest-plot of standardized beta values
-library(sjPlot)
-get_model_data(soilnmodel, type = c("std"), show.df = TRUE)
+plot_model(soilnmodel, type = "std2", title = "", group.terms = c(1,2,2),
+           order.terms = c(1,2,3), colors = c("black", "grey"), axis.labels = 
+             c("Distance * Moisture", "Moisture", "Distance")) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+  
 
 # visualize raw data points with model expecations on top
-soiln.data$modelexp <- predict(soilnmodel, type = "response")
-newdat.area$lwr <- pred.rich.area$fit - 1.96 * pred.rich.area$se.fit
-newdat.area$upr <- pred.rich.area$fit + 1.96 * pred.rich.area$se.fit
-
+modelexp <- predict(soilnmodel, type = "response", #se.fit = TRUE,
+                    interval = "confidence")
+head(modelexp)
+soiln.data <- cbind(soiln.data, modelexp)
+head(soiln.data)
+                    
 ggplot(soiln.data, aes(distance, soild15N)) +
   geom_point() + theme_classic() + 
+  geom_line(aes(y = fit), size = 1) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), fill = "black", 
+                  alpha = .25) +
   theme(text = element_text(size = 16)) +
   theme(axis.text.x = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
@@ -255,7 +258,7 @@ ggplot(carabidbodynfig.data, aes(distance, bodyd15N)) +
   theme(axis.text.y = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
   coord_cartesian(ylim = c(0, 12)) +
-  labs(x="Distance from the Kunsoot River (m)", 
+  labs(x ="Distance from the Kunsoot River (m)", 
        y = expression(paste("Carabidae body δ"^"15"*"N"*" (‰)")))
 
 # (2b) carabid body nutrients model
