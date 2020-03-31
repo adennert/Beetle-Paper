@@ -67,9 +67,9 @@ VarCorr(repeatmodel)
 # dataset
 soiln.data <- read.csv("DATA/(1) soiln.csv", header = TRUE, ",", strip.white = TRUE)
 View(soiln.data)
-str(soiln.data) #check that distance is an integer
+str(soiln.data) #check that distance is an integer or numeric
 levels(soiln.data$transect) #check levels of categorical variable
-soiln.data$distance <- as.integer(soiln.data$distance)
+#soiln.data$distance <- as.numeric(soiln.data$distance)
 summary(soiln.data)
 names(soiln.data)
 
@@ -90,8 +90,8 @@ ggplot(soiln.data, aes(distance, soild15N)) +
 # cannot include random effect of transect due to singularity issues
 # must standardize these variables as they are both continuous with differing
 #variance, range, and units
-soiln.data$distance.std <- scale(soiln.data$distance, center = TRUE, scale = TRUE)
-soiln.data$moisture.std <- scale(soiln.data$moisture, center = TRUE, scale = TRUE)
+soiln.data$distance.std <- c(scale(soiln.data$distance, center = TRUE, scale = TRUE))
+soiln.data$moisture.std <- c(scale(soiln.data$moisture, center = TRUE, scale = TRUE))
 
 # create the standardized soil model
 soilnmodel <- lm(soild15N ~ distance.std * moisture.std, data = soiln.data)
@@ -126,23 +126,38 @@ testResiduals(sim)
 # soil model coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(soilnmodel, type = "std2", title = "", group.terms = c(1,2,2),
+plot_model(soilnmodel, type = "est", title = "", group.terms = c(1,2,2),
            order.terms = c(1,2,3), colors = c("black", "grey"), axis.labels = 
              c("Distance * Moisture", "Moisture", "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
   
-# visualize raw data points with model expecations on top
-modelexp <- predict(soilnmodel, type = "response", #se.fit = TRUE,
-                    interval = "confidence")
-head(modelexp)
-soiln.data <- cbind(soiln.data, modelexp)
-head(soiln.data)
-                    
-ggplot(soiln.data, aes(distance, soild15N)) +
-  geom_point() + theme_classic() + 
-  geom_line(aes(y = fit), size = 1) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), fill = "black", 
-                  alpha = .25) +
+# create a new data frame to 
+newdat.soil <- expand.grid(distance.std = with(soiln.data, 
+                                             seq(min(distance.std), max(distance.std), 
+                                                 length.out = 30)),
+                           moisture.std = mean(soiln.data$moisture.std))
+modelexp <- predict(soilnmodel, newdat.soil, type = "response", 
+                    se.fit = TRUE, re.form = NA, full = T)
+newdat.soil$fit <- modelexp$fit
+newdat.soil$lwr <- modelexp$fit - 1.96 * modelexp$se.fit
+newdat.soil$upr <- modelexp$fit + 1.96 * modelexp$se.fit
+
+#Code to display the x-axis unstandardized
+#unstandardize <- function() {
+  #function(x) format(x*sd(soiln.data$distance) + mean(soiln.data$distance), digits = 0) 
+#}
+
+#Plotting the raw data points with model on top; note that moisture is displayed
+#held at its mean
+
+ggplot() +
+  geom_point(data = soiln.data, aes(x = distance.std, y = soild15N), alpha = 0.6, 
+             pch = 16, size = 2, colour = "black") + 
+  theme_classic() + 
+  geom_line(data = newdat.soil, aes(x = distance.std, y = fit), size = 1, 
+            colour = "black") +
+  geom_ribbon(data = newdat.soil, aes(x = distance.std, ymin = lwr, ymax = upr), fill = "black", 
+              alpha = .25) +
   theme(text = element_text(size = 16)) +
   theme(axis.text.x = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
@@ -150,7 +165,10 @@ ggplot(soiln.data, aes(distance, soild15N)) +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
   coord_cartesian(ylim = c(0, 12)) +
   labs(x="Distance from the Kunsoot River (m)", 
-       y = expression(paste("Soil δ"^"15"*"N"*" (‰)")))
+       y = expression(paste("Soil δ"^"15"*"N"*" (‰)"))) +
+  scale_x_continuous(breaks = c(-1.2247, 0, 1.2247), label = c("0", "25", "50"))
+  #scale_x_continuous(labels = unstandardize())
+                   
 
 #### 2. BODY N (SIA) ####
 
