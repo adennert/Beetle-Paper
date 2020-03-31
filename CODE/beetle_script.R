@@ -27,13 +27,6 @@ library(Hmisc)
 #install.packages("DHARMa")
 library(DHARMa)
 
-# for bootstrapped confidence intervals
-library(visreg)
-library(devtools)
-devtools::install_github("remkoduursma/bootpredictlme4")
-library(bootpredictlme4)
-
-
 #### 0. REPEATABILITY ####
 # dataset
 repeat.data <- read.csv("DATA/(0) repeat.csv", header = TRUE, ",", strip.white = TRUE)
@@ -89,7 +82,7 @@ ggplot(soiln.data, aes(distance, soild15N)) +
 # (1) soil model
 # cannot include random effect of transect due to singularity issues
 # must standardize these variables as they are both continuous with differing
-#variance, range, and units
+# variance, range, and units
 soiln.data$distance.std <- c(scale(soiln.data$distance, center = TRUE, scale = TRUE))
 soiln.data$moisture.std <- c(scale(soiln.data$moisture, center = TRUE, scale = TRUE))
 
@@ -131,7 +124,7 @@ plot_model(soilnmodel, type = "est", title = "", group.terms = c(1,2,2),
              c("Distance * Moisture", "Moisture", "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
   
-# create a new data frame to 
+# create a new data frame to make model predictions
 newdat.soil <- expand.grid(distance.std = with(soiln.data, 
                                              seq(min(distance.std), max(distance.std), 
                                                  length.out = 30)),
@@ -142,14 +135,13 @@ newdat.soil$fit <- modelexp$fit
 newdat.soil$lwr <- modelexp$fit - 1.96 * modelexp$se.fit
 newdat.soil$upr <- modelexp$fit + 1.96 * modelexp$se.fit
 
-#Code to display the x-axis unstandardized
+# Code to display the x-axis unstandardized
 #unstandardize <- function() {
   #function(x) format(x*sd(soiln.data$distance) + mean(soiln.data$distance), digits = 0) 
 #}
 
-#Plotting the raw data points with model on top; note that moisture is displayed
-#held at its mean
-
+# plot the raw data points with model on top
+# note that moisture is displayed held at its mean
 ggplot() +
   geom_point(data = soiln.data, aes(x = distance.std, y = soild15N), alpha = 0.6, 
              pch = 16, size = 2, colour = "black") + 
