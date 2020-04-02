@@ -178,7 +178,7 @@ View(weevil.subset)
 carabid.subset <- sia.data %>% filter(trophic == "Carabidae")
 View(carabid.subset)
 
-# visualize raw weevil data 
+# visualize raw data 
 library(ggplot2)
 sia.data$distance <- as.factor(sia.data$distance) #make distance a factor for the boxplot 
 str(sia.data)
@@ -229,12 +229,13 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# coefficient plot - distance does affect weevil body nutrients
+# (2a) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(weevilbodynmodel, type = "std2", colors = "bw", title = "Body d15N") +
-  theme_classic() +
-  geom_hline(yintercept = 0, lty = 2, colour = "gray")
-
+ plot_model(weevilbodynmodel, type = "std2", title = "", 
+           group.terms = c(1), order.terms = c(1), colors = c("black"), 
+           axis.labels = c("Distance"), axis.lim = c(-1,1)) + 
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
 # (2b) carabid body N model - using carabid.subset
 hist(carabid.subset$bodyd15N) #check distribution of response
@@ -270,12 +271,15 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# coefficient plot - distance does NOT affect carabid body nutrients
+# (2b) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(carabidbodynmodel, type = "std2", colors = "bw", title = "Body d15N") +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
+plot_model(carabidbodynmodel, type = "std2", title = "", 
+           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
+           axis.labels = c("Distance"), axis.lim = c(-1,1)) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
-
+ 
 #### 3. BODY SIZE (SIA) ####
 
 # dataset
@@ -307,7 +311,6 @@ ggplot(sia.data, aes(bodyd15N, median, color = species)) +
   theme(legend.text = element_text(size = 14, face = "italic")) +
   labs(x = expression(paste("Body δ"^"15"*"N"*" (‰)")), 
        y = "Elytron length (mm)")
-
 
 # (3a) weevil body size SIA subset model - using weevil.subset
 hist(weevil.subset$median) #check distribution of response
@@ -341,10 +344,14 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# coefficient plot - no significant effect on weevil bodysize
+# (3a) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(weevilbodysizemodel, type = "std2", colors = "bw", title = "body size") +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
+plot_model(weevilbodysizemodel, type = "std2", title = "", 
+           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
+           axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+
 
 # (3b) carabid body size SIA subset model - using carabid.subset
 hist(carabid.subset$median) #check distribution of response
@@ -378,11 +385,13 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# coefficient plot - no significant effect on carabid bodysize
+# (3b) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(carabidbodysizemodel, type = "std2", colors = "bw", title = "body size") +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
-
+plot_model(carabidbodysizemodel, type = "std2", title = "", 
+           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
+           axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
 
 #### 4. BODY SIZE (FULL MODEL) ####
@@ -395,28 +404,41 @@ bodysize.data$round <- ordered(bodysize.data$round, levels = 1:4) #round as ordi
 summary(bodysize.data)
 names(bodysize.data)
 
+# subset
+# create a subset that eliminates N. incomptus (n=1) and L. ferruginosus (n=2)
+# because insuffient sample size to estimate model parameters for these species
+library(dplyr)
+fullbodysize.subset <- filter(bodysize.data, species %in% c("Steremnius tuberosus","Cychrus tuberculatus", 
+                                                            "Pterostichus amethystinus","Pterostichus crenicollis", 
+                                                            "Scaphinotus angusticollis","Steremnius carinatus", 
+                                                            "Zacotus matthewsii"))
+View(fullbodysize.subset)
+
 # (4) full bodysize model
-hist(bodysize.data$median) #check distribution of response
-levels(bodysize.data$trophic) #check levels of categorical variables
-levels(bodysize.data$sex)
-levels(bodysize.data$species)
-levels(bodysize.data[,"species"]) # check S. tuberosus first (intercept)
-bodysize.data$species = factor(bodysize.data$species, levels(bodysize.data$species)[c(8,1,2,3,4,5,6,7,9)])
-str(bodysize.data) #check 'round' is ordinal
-bodysize.data$round <- ordered(bodysize.data$round, levels = 1:4, labels=c("1", "2", "3", "4"))
+hist(fullbodysize.subset$median) #check distribution of response
+levels(fullbodysize.subset$trophic) #check levels of categorical variables
+levels(fullbodysize.subset$sex)
+levels(fullbodysize.subset$species)
+levels(fullbodysize.subset[,"species"]) # check S. tuberosus first (intercept)
+fullbodysize.subset$species = factor(fullbodysize.subset$species, levels(fullbodysize.subset$species)[c(2,3,4,1,5,6,7,8,9)])
+levels(fullbodysize.subset[, "sex"]) # check that F first (intercept)
+fullbodysize.subset$sex = factor(fullbodysize.subset$sex, levels(fullbodysize.subset$sex)[c(2,3,1)])
+str(fullbodysize.subset) #check 'round' is ordinal
+
+fullbodysize.subset$round <- ordered(fullbodysize.subset$round, levels = 1:4, labels=c("1", "2", "3", "4"))
 
 fullbodysizemodel <- lmer(median ~ distance*species + trophic + sex + round + 
-                            (1|transect), data = bodysize.data)
+                            (1|transect), data = fullbodysize.subset)
 summary(fullbodysizemodel)
 
 # check residuals
-ggplot(bodysize.data, aes(x = fitted(fullbodysizemodel), y = resid(fullbodysizemodel))) +
+ggplot(fullbodysize.subset, aes(x = fitted(fullbodysizemodel), y = resid(fullbodysizemodel))) +
   geom_point() +
   theme_classic() +
   geom_line(y=0, colour="red") +
   labs(x="Fitted values", y= "Residuals")
-qqnorm(as.vector(resid(bodysizemodel)))
-qqline(as.vector(resid(bodysizemodel)), col = "blue")
+qqnorm(as.vector(resid(fullbodysizemodel)))
+qqline(as.vector(resid(fullbodysizemodel)), col = "blue")
 
 ## using DHARMa to interpret residuals
 # set simulations constant 
@@ -427,11 +449,11 @@ sim <- simulateResiduals(fittedModel = fullbodysizemodel, n = 500) # the calcula
 # plot the scaled residuals (Observed vs Expected)
 plot(sim)
 # plot residuals against the other predictors
-plotResiduals(bodysize.data$distance, sim$scaledResiduals) 
-plotResiduals(bodysize.data$species, sim$scaledResiduals) 
-plotResiduals(bodysize.data$trophic, sim$scaledResiduals)
-plotResiduals(bodysize.data$sex, sim$scaledResiduals)
-plotResiduals(bodysize.data$round, sim$scaledResiduals)
+plotResiduals(fullbodysize.subset$distance, sim$scaledResiduals) 
+plotResiduals(fullbodysize.subset$species, sim$scaledResiduals) #2 spp. have been eliminated
+plotResiduals(fullbodysize.subset$trophic, sim$scaledResiduals)
+plotResiduals(fullbodysize.subset$sex, sim$scaledResiduals)
+plotResiduals(fullbodysize.subset$round, sim$scaledResiduals)
 # test outliers
 testOutliers(sim)
 # test dispersion 
@@ -439,10 +461,33 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# coefficient plot - body size not affected by distance
+# (4) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(fullbodysizemodel, type = "std2", colors = "bw", title = "body size") +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
+plot_model(fullbodysizemodel, type = "est", title = "", #choose correct type =
+           group.terms = c(1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,1,1,1), 
+           order.terms = c(1,13,14,15,16,17,18,12,11,10,8,9,2,3,4,5,6,7), 
+           colors = c("grey", "black"), 
+           axis.labels = c("")) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+
+
+#testing out labels:
+# (4) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
+library(sjPlot)
+plot_model(fullbodysizemodel, type = "est", title = "", #choose correct type =
+           group.terms = c(1,2,1,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1), 
+           order.terms = c(1,13,14,15,16,17,18,12,11,10,8,9,2,3,4,5,6,7), 
+           colors = c("grey", "black"), 
+           axis.labels = c("Z. matthewsii", "S. carinatus", "S. angusticollis", 
+                           "P. crenicollis", "P. amethystinus", "C. tuberculatus", 
+                           "Sex NA", "Male", "Sampling Round 4", "Sampling Round 3", 
+                           "Sampling Round 2", "Distance * Z. matthewsii", "Distance * S. carinatus", 
+                           "Distance * S. angusticollis", "Distance * P. crenicollis", 
+                           "Distance * P. amethystinus", "Distance * C. tuberculatus", 
+                           "Distance"), axis.lim = c(-3,9)) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
 #### 5. POST HOC (SIA) ####
 
@@ -507,10 +552,13 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# coefficient plot - weevil body d15N has positive effect on body %N
+# (5a) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(weevilposthocmodel, type = "std2", colors = "bw", title = "body %N") +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
+plot_model(weevilposthocmodel, type = "std2", title = "", 
+           group.terms = c(1), order.terms = c(1), colors = c("black"), 
+           axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
 # (5b) carabid post hoc model
 hist(carabid.subset$bodyncombust) #check distribution of response
@@ -544,7 +592,10 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# coefficient plot - carabid body d15N has no significant effect on body %N
+# (5b) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(carabidposthocmodel, type = "std2", colors = "bw", title = "body %N") +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
+plot_model(carabidposthocmodel, type = "std2", title = "", 
+           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
+           axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
