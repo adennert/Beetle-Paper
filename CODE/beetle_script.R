@@ -400,60 +400,63 @@ plot_model(carabidbodysizemodel, type = "std2", title = "",
 bodysize.data <- read.csv("DATA/(3) bodysize.csv", header = TRUE, ",", strip.white = TRUE)
 View(bodysize.data)
 str(bodysize.data) 
-bodysize.data$round <- ordered(bodysize.data$round, levels = 1:4) #round as ordinal 
 summary(bodysize.data)
 names(bodysize.data)
 
-# subset
-# create a subset that eliminates N. incomptus (n=1) and L. ferruginosus (n=2)
-# because insuffient sample size to estimate model parameters for these species
+# subsets
 library(dplyr)
-fullbodysize.subset <- filter(bodysize.data, species %in% c("Steremnius tuberosus","Cychrus tuberculatus", 
-                                                            "Pterostichus amethystinus","Pterostichus crenicollis", 
-                                                            "Scaphinotus angusticollis","Steremnius carinatus", 
-                                                            "Zacotus matthewsii"))
-View(fullbodysize.subset)
+#weevil subset:
+#create a subset that includes all weevils EXCEPT N. incomptus (n=1) 
+# because insuffient sample size to estimate model parameters for this species
+fullbodysizeweevil.subset <- filter(bodysize.data, species %in% c("Steremnius tuberosus", 
+                                                                  "Steremnius carinatus"))
+View(fullbodysizeweevil.subset)
+#carabid subset:
+#create a subset that includes all SEXED carabids EXCEPT L. ferruginosus (n=2)
+# because insuffient sample size to estimate model parameters for this species
+fullbodysizecarabid.subset <- filter(bodysize.data, species %in% c("Cychrus tuberculatus",
+                                                                   "Pterostichus amethystinus",
+                                                                   "Pterostichus crenicollis",
+                                                                   "Scaphinotus angusticollis",
+                                                                   "Zacotus matthewsii"))
+fullbodysizesexedcarabid.subset <- filter(fullbodysizecarabid.subset, sex %in% c("F", "M"))
+View(fullbodysizesexedcarabid.subset) #n=293
 
-# (4) full bodysize model
-hist(fullbodysize.subset$median) #check distribution of response
-levels(fullbodysize.subset$trophic) #check levels of categorical variables
-levels(fullbodysize.subset$sex)
-levels(fullbodysize.subset$species)
+
+
+# (4a) weevil full bodysize model
+hist(fullbodysizeweevil.subset$median) #check distribution of response 
+levels(fullbodysizeweevil.subset$species) #check levels of categorical variables
 levels(fullbodysize.subset[,"species"]) # check S. tuberosus first (intercept)
-fullbodysize.subset$species = factor(fullbodysize.subset$species, levels(fullbodysize.subset$species)[c(2,3,4,1,5,6,7,8,9)])
-levels(fullbodysize.subset[, "sex"]) # check that F first (intercept)
-fullbodysize.subset$sex = factor(fullbodysize.subset$sex, levels(fullbodysize.subset$sex)[c(2,3,1)])
-str(fullbodysize.subset) #check 'round' is ordinal
+fullbodysizeweevil.subset$species = factor(fullbodysizeweevil.subset$species, levels(fullbodysizeweevil.subset$species)[c(8,2,3,4,1,5,6,7,9)])
+str(fullbodysizeweevil.subset) #check 'round' is ordinal
+fullbodysizeweevil.subset$round <- ordered(fullbodysizeweevil.subset$round, levels = 1:4, labels=c("1", "2", "3", "4"))
 
-fullbodysize.subset$round <- ordered(fullbodysize.subset$round, levels = 1:4, labels=c("1", "2", "3", "4"))
+fullbodysizeweevilmodel <- lmer(median ~ distance*species + round + 
+                          (1|transect), data = fullbodysizeweevil.subset)
+summary(fullbodysizeweevilmodel)
 
-fullbodysizemodel <- lmer(median ~ distance*species + trophic + sex + round + 
-                            (1|transect), data = fullbodysize.subset)
-summary(fullbodysizemodel)
-
-# check residuals
-ggplot(fullbodysize.subset, aes(x = fitted(fullbodysizemodel), y = resid(fullbodysizemodel))) +
+# (4a) check residuals
+ggplot(fullbodysizeweevil.subset, aes(x = fitted(fullbodysizeweevilmodel), y = resid(fullbodysizeweevilmodel))) +
   geom_point() +
   theme_classic() +
   geom_line(y=0, colour="red") +
   labs(x="Fitted values", y= "Residuals")
-qqnorm(as.vector(resid(fullbodysizemodel)))
-qqline(as.vector(resid(fullbodysizemodel)), col = "blue")
+qqnorm(as.vector(resid(fullbodysizeweevilmodel)))
+qqline(as.vector(resid(fullbodysizeweevilmodel)), col = "blue")
 
-## using DHARMa to interpret residuals
+## (4a) using DHARMa to interpret residuals
 # set simulations constant 
 set.seed(1)
 # calculate scaled residuals
 library(DHARMa)
-sim <- simulateResiduals(fittedModel = fullbodysizemodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
+sim <- simulateResiduals(fittedModel = fullbodysizeweevilmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
 # plot the scaled residuals (Observed vs Expected)
 plot(sim)
 # plot residuals against the other predictors
-plotResiduals(fullbodysize.subset$distance, sim$scaledResiduals) 
-plotResiduals(fullbodysize.subset$species, sim$scaledResiduals) #2 spp. have been eliminated
-plotResiduals(fullbodysize.subset$trophic, sim$scaledResiduals)
-plotResiduals(fullbodysize.subset$sex, sim$scaledResiduals)
-plotResiduals(fullbodysize.subset$round, sim$scaledResiduals)
+plotResiduals(fullbodysizeweevil.subset$distance, sim$scaledResiduals) 
+plotResiduals(fullbodysizeweevil.subset$species, sim$scaledResiduals) 
+plotResiduals(fullbodysizeweevil.subset$round, sim$scaledResiduals)
 # test outliers
 testOutliers(sim)
 # test dispersion 
@@ -461,33 +464,70 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# (4) coefficient plot with parameters with strong effects in black, 
+# (4a) coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(fullbodysizemodel, type = "est", title = "", #choose correct type =
-           group.terms = c(1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,1,1,1), 
-           order.terms = c(1,13,14,15,16,17,18,12,11,10,8,9,2,3,4,5,6,7), 
-           colors = c("grey", "black"), 
+plot_model(fullbodysizeweevilmodel, type = "est", title = "",
+           group.terms = c(1,1,1,1,1,1), 
+           order.terms = c(""), 
+           colors = c("grey","black"), 
            axis.labels = c("")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
+# (4b) carabid full bodysize model 
+hist(fullbodysizesexedcarabid.subset$median) #check distribution of response 
+levels(fullbodysizesexedcarabid.subset$sex) #check levels of categorical variables
+levels(fullbodysizesexedcarabid.subset$species) #check levels of categorical variables
+levels(fullbodysizesexedcarabid.subset[,"species"]) # check P. amethystinus first (intercept)
+fullbodysizesexedcarabid.subset$species = factor(fullbodysizesexedcarabid.subset$species, 
+                      levels(fullbodysizesexedcarabid.subset$species)[c(4,8,2,3,1,5,6,7,9)])
+levels(fullbodysizesexedcarabid.subset[, "sex"]) # check that F first (intercept)
+fullbodysizesexedcarabid.subset$sex = factor(fullbodysizesexedcarabid.subset$sex, levels(fullbodysizesexedcarabid.subset$sex)[c(1,2)])
+str(fullbodysizesexedcarabid.subset) #check 'round' is ordinal
+fullbodysizesexedcarabid.subset$round <- ordered(fullbodysizesexedcarabid.subset$round, levels = 1:4, labels=c("1", "2", "3", "4"))
 
-#testing out labels:
-# (4) coefficient plot with parameters with strong effects in black, 
+fullbodysizecarabidmodel <- lmer(median ~ distance*species + sex + round + (1|transect), 
+                                 data = fullbodysizesexedcarabid.subset)
+summary(fullbodysizecarabidmodel)
+
+# (4b) check residuals
+ggplot(fullbodysizesexedcarabid.subset, aes(x = fitted(fullbodysizecarabidmodel), y = resid(fullbodysizecarabidmodel))) +
+  geom_point() +
+  theme_classic() +
+  geom_line(y=0, colour="red") +
+  labs(x="Fitted values", y= "Residuals")
+qqnorm(as.vector(resid(fullbodysizecarabidmodel)))
+qqline(as.vector(resid(fullbodysizecarabidmodel)), col = "blue")
+
+## (4b) using DHARMa to interpret residuals
+# set simulations constant 
+set.seed(1)
+# calculate scaled residuals
+library(DHARMa)
+sim <- simulateResiduals(fittedModel = fullbodysizecarabidmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
+# plot the scaled residuals (Observed vs Expected)
+plot(sim)
+# plot residuals against the other predictors
+plotResiduals(fullbodysizesexedcarabid.subset$distance, sim$scaledResiduals) 
+plotResiduals(fullbodysizesexedcarabid.subset$species, sim$scaledResiduals) 
+plotResiduals(fullbodysizesexedcarabid.subset$sex, sim$scaledResiduals)
+plotResiduals(fullbodysizesexedcarabid.subset$round, sim$scaledResiduals)
+# test outliers
+testOutliers(sim)
+# test dispersion 
+testDispersion(sim)
+# shows QQ plot, dispersion, outliers in 1 plot
+testResiduals(sim)
+
+# (4b) coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(fullbodysizemodel, type = "est", title = "", #choose correct type =
-           group.terms = c(1,2,1,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1), 
-           order.terms = c(1,13,14,15,16,17,18,12,11,10,8,9,2,3,4,5,6,7), 
-           colors = c("grey", "black"), 
-           axis.labels = c("Z. matthewsii", "S. carinatus", "S. angusticollis", 
-                           "P. crenicollis", "P. amethystinus", "C. tuberculatus", 
-                           "Sex NA", "Male", "Sampling Round 4", "Sampling Round 3", 
-                           "Sampling Round 2", "Distance * Z. matthewsii", "Distance * S. carinatus", 
-                           "Distance * S. angusticollis", "Distance * P. crenicollis", 
-                           "Distance * P. amethystinus", "Distance * C. tuberculatus", 
-                           "Distance"), axis.lim = c(-3,9)) +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+plot_model(fullbodysizecarabidmodel, type = "est", title = "",
+           group.terms = c(), 
+           order.terms = c(), 
+           colors = c("black"), 
+           axis.labels = c("")) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
 #### 5. POST HOC (SIA) ####
 
