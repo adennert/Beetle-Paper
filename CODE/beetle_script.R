@@ -725,6 +725,7 @@ ggplot(sia.data, aes(bodyd15N, bodyncombust, color = species)) +
 hist(weevil.subset$bodyncombust) #check distribution of response
 levels(weevil.subset$trophic) #check levels of categorical variables
 weevilposthocmodel <- lm(bodyncombust ~ bodyd15N, data = weevil.subset)
+summary(weevilposthocmodel)
 
 # check residuals
 ggplot(weevil.subset, aes(x = fitted(weevilposthocmodel), y = resid(weevilposthocmodel))) +
