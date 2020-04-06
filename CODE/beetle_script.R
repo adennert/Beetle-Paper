@@ -62,7 +62,6 @@ soiln.data <- read.csv("DATA/(1) soiln.csv", header = TRUE, ",", strip.white = T
 View(soiln.data)
 str(soiln.data) #check that distance is an integer or numeric
 levels(soiln.data$transect) #check levels of categorical variable
-#soiln.data$distance <- as.numeric(soiln.data$distance)
 summary(soiln.data)
 names(soiln.data)
 
@@ -111,8 +110,8 @@ library(DHARMa)
 sim <- simulateResiduals(fittedModel = soilnmodel, n = 500) 
 # the calculated residuals are stored in sim$scaledResiduals
 # plot residuals against the other predictors
-plotResiduals(soiln.data$distance, sim$scaledResiduals)
-plotResiduals(soiln.data$moisture, sim$scaledResiduals)
+plotResiduals(soiln.data$distance.std, sim$scaledResiduals)
+plotResiduals(soiln.data$moisture.std, sim$scaledResiduals)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
@@ -124,6 +123,7 @@ plot_model(soilnmodel, type = "est", title = "", group.terms = c(1,2,2),
              c("Distance * Moisture", "Moisture", "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
   
+# create a plot showing the model predictions and raw data
 # create a new data frame to make model predictions
 newdat.soil <- expand.grid(distance.std = with(soiln.data, 
                                              seq(min(distance.std), max(distance.std), 
@@ -180,9 +180,9 @@ View(carabid.subset)
 
 # visualize raw data 
 library(ggplot2)
-sia.data$distance <- as.factor(sia.data$distance) #make distance a factor for the boxplot 
+
 str(sia.data)
-ggplot(sia.data, aes(distance, bodyd15N, fill = species)) +
+ggplot(sia.data, aes(as.factor(distance), bodyd15N, fill = species)) +
   stat_boxplot() + theme_classic() +
   theme(text = element_text(size = 16)) +
   theme(axis.text.x = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
@@ -201,7 +201,8 @@ hist(weevil.subset$bodyd15N) #check distribution of response
 levels(weevil.subset$trophic) #check levels of categorical variables
 weevil.subset$distance <- as.integer(weevil.subset$distance) #make distance an integer 
 str(weevil.subset)
-weevilbodynmodel <- lmer(bodyd15N ~ distance + (1|transect), data = weevil.subset)
+weevilbodynmodel <- lm(bodyd15N ~ distance, data = weevil.subset)
+summary(weevilbodynmodel)
 
 # check residuals
 ggplot(weevil.subset, aes(x = fitted(weevilbodynmodel), y = resid(weevilbodynmodel))) +
@@ -229,20 +230,12 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# (2a) coefficient plot with parameters with strong effects in black, 
-# and parameters with weak/no effect in grey
-library(sjPlot)
- plot_model(weevilbodynmodel, type = "std2", title = "", 
-           group.terms = c(1), order.terms = c(1), colors = c("black"), 
-           axis.labels = c("Distance"), axis.lim = c(-1,1)) + 
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
-
 # (2b) carabid body N model - using carabid.subset
 hist(carabid.subset$bodyd15N) #check distribution of response
 levels(carabid.subset$trophic) #check levels of categorical variables
 carabid.subset$distance <- as.integer(carabid.subset$distance) #make distance an integer 
 str(carabid.subset)
-carabidbodynmodel <- lmer(bodyd15N ~ distance + (1|transect), data = carabid.subset)
+carabidbodynmodel <- lm(bodyd15N ~ distance, data = carabid.subset)
 summary(carabidbodynmodel)
 
 # check residuals
@@ -271,14 +264,57 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# (2b) coefficient plot with parameters with strong effects in black, 
-# and parameters with weak/no effect in grey
-library(sjPlot)
-plot_model(carabidbodynmodel, type = "std2", title = "", 
-           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
-           axis.labels = c("Distance"), axis.lim = c(-1,1)) +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+# create a plot showing the model predictions and raw data
+# create a new data frame to make model predictions
+newdat.bodyn <- expand.grid(distance = with(sia.data, 
+                                               seq(min(distance), max(distance), 
+                                                   length.out = 58)))
 
+# make model predictions with upr/lower confidence intervals for carabid model
+carmodelexp <- predict(carabidbodynmodel, newdat.bodyn, type = "response", 
+                    se.fit = TRUE, re.form = NA, full = T)
+newdat.bodyn$car.fit <- carmodelexp$fit
+newdat.bodyn$car.lwr <- carmodelexp$fit - 1.96 * carmodelexp$se.fit
+newdat.bodyn$car.upr <- carmodelexp$fit + 1.96 * carmodelexp$se.fit
+
+# make model predictions with upr/lower confidence intervals for weevil model
+weemodelexp <- predict(weevilbodynmodel, newdat.bodyn, type = "response", 
+                       se.fit = TRUE, re.form = NA, full = T)
+newdat.bodyn$wee.fit <- weemodelexp$fit
+newdat.bodyn$wee.lwr <- weemodelexp$fit - 1.96 * weemodelexp$se.fit
+newdat.bodyn$wee.upr <- weemodelexp$fit + 1.96 * weemodelexp$se.fit
+
+# Code to display the x-axis unstandardized
+#unstandardize <- function() {
+#function(x) format(x*sd(soiln.data$distance) + mean(soiln.data$distance), digits = 0) 
+#}
+
+# plot the raw data points with model on top
+ggplot() +
+  #add raw data points
+  geom_point(data = sia.data, aes(x = distance, y = bodyd15N), alpha = 0.6, 
+             pch = 16, size = 2, colour = "black") + 
+  theme_classic() + 
+  #add carabid model fit
+  geom_line(data = newdat.bodyn, aes(x = distance, y = car.fit), size = 1, 
+            colour = "black") +
+  geom_ribbon(data = newdat.bodyn, aes(x = distance, ymin = car.lwr, ymax = 
+                                        car.upr), fill = "black", alpha = .25) +
+  #add weevil model fit
+  geom_line(data = newdat.bodyn, aes(x = distance, y = wee.fit), size = 1, 
+            colour = "black") +
+  geom_ribbon(data = newdat.bodyn, aes(x = distance, ymin = wee.lwr, ymax = 
+                                         wee.upr), fill = "black", alpha = .25) +
+  theme(text = element_text(size = 16)) +
+  theme(axis.text.x = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.text.y = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  coord_cartesian(ylim = c(0, 12)) +
+  labs(x="Distance from the Kunsoot River (m)", 
+       y = expression(paste("Body δ"^"15"*"N"*" (‰)"))) #+
+  #scale_x_continuous(breaks = c(-1.2247, 0, 1.2247), label = c("0", "25", "50"))
+#scale_x_continuous(labels = unstandardize())
  
 #### 3. BODY SIZE (SIA) ####
 
