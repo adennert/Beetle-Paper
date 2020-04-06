@@ -232,7 +232,7 @@ testResiduals(sim)
 # (2a) coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
- plot_model(weevilbodynmodel, type = "std2", title = "", 
+ plot_model(weevilbodynmodel, type = "est", title = "", 
            group.terms = c(1), order.terms = c(1), colors = c("black"), 
            axis.labels = c("Distance"), axis.lim = c(-1,1)) + 
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
@@ -274,7 +274,7 @@ testResiduals(sim)
 # (2b) coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(carabidbodynmodel, type = "std2", title = "", 
+plot_model(carabidbodynmodel, type = "est", title = "", 
            group.terms = c(1), order.terms = c(1), colors = c("grey"), 
            axis.labels = c("Distance"), axis.lim = c(-1,1)) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
@@ -347,7 +347,7 @@ testResiduals(sim)
 # (3a) coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(weevilbodysizemodel, type = "std2", title = "", 
+plot_model(weevilbodysizemodel, type = "est", title = "", 
            group.terms = c(1), order.terms = c(1), colors = c("grey"), 
            axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
@@ -388,7 +388,7 @@ testResiduals(sim)
 # (3b) coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(carabidbodysizemodel, type = "std2", title = "", 
+plot_model(carabidbodysizemodel, type = "est", title = "", 
            group.terms = c(1), order.terms = c(1), colors = c("grey"), 
            axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
@@ -410,7 +410,8 @@ library(dplyr)
 # because insuffient sample size to estimate model parameters for this species
 fullbodysizeweevil.subset <- filter(bodysize.data, species %in% c("Steremnius tuberosus", 
                                                                   "Steremnius carinatus"))
-View(fullbodysizeweevil.subset)
+View(fullbodysizeweevil.subset) #n=1010
+
 #carabid subset:
 #create a subset that includes all SEXED carabids EXCEPT L. ferruginosus (n=2)
 # because insuffient sample size to estimate model parameters for this species
@@ -427,10 +428,14 @@ View(fullbodysizesexedcarabid.subset) #n=293
 # (4a) weevil full bodysize model
 hist(fullbodysizeweevil.subset$median) #check distribution of response 
 levels(fullbodysizeweevil.subset$species) #check levels of categorical variables
-levels(fullbodysize.subset[,"species"]) # check S. tuberosus first (intercept)
-fullbodysizeweevil.subset$species = factor(fullbodysizeweevil.subset$species, levels(fullbodysizeweevil.subset$species)[c(8,2,3,4,1,5,6,7,9)])
-str(fullbodysizeweevil.subset) #check 'round' is ordinal
-fullbodysizeweevil.subset$round <- ordered(fullbodysizeweevil.subset$round, levels = 1:4, labels=c("1", "2", "3", "4"))
+levels(fullbodysizeweevil.subset[,"species"]) # check S. tuberosus first (intercept)
+fullbodysizeweevil.subset$species = factor(fullbodysizeweevil.subset$species, 
+  levels(fullbodysizeweevil.subset$species)[c(8,1,2,3,4,5,6,7,9)])
+
+str(fullbodysizeweevil.subset) #we decided to have 'round' as an INTEGER - but note not important any way though
+fullbodysizeweevil.subset$round <- as.integer(fullbodysizeweevil.subset$round)  
+fullbodysizeweevil.subset$round <- as.ordered(fullbodysizeweevil.subset$round)
+fullbodysizeweevil.subset$round <- as.factor(fullbodysizeweevil.subset$round)
 
 fullbodysizeweevilmodel <- lmer(median ~ distance*species + round + 
                           (1|transect), data = fullbodysizeweevil.subset)
@@ -464,15 +469,42 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# (4a) coefficient plot with parameters with strong effects in black, 
-# and parameters with weak/no effect in grey
+# (4a) full coefficient plot for Supplemental 
+#parameters with strong effects in black, parameters with weak/no effect in grey
 library(sjPlot)
 plot_model(fullbodysizeweevilmodel, type = "est", title = "",
-           group.terms = c(1,1,1,1,1,1), 
-           order.terms = c(""), 
+           group.terms = c(1,2,1,1), 
+           order.terms = c(1,4,3,2), 
            colors = c("grey","black"), 
-           axis.labels = c("")) +
+           axis.labels = c("S. carinatus", "Sampling \nRound", 
+                           "Distance * \nS. carinatus", "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+
+  # ? how to make part of the label italic? 
+  # ? how to include expression object in axis.labels = 
+  #title1 <- expression(paste("Distance *", italic("S. carinatus"))) 
+  #title1 <- expression("S. carinatus")
+  #title2 <- expression("b")
+  #title3 <- expression("c")
+  #title4 <- expression("d")
+
+  #my_y_title <- expression(paste("No. of ", italic("bacteria X"), 
+                               " isolates with corresponding types"))
+  #.... + labs(y=my_y_title)
+
+
+# (4a) select coefficient plot for Body Text
+# parameters with strong effects in black, parameters with weak/no effect in grey
+# 'sampling round' and 'species' removed
+library(sjPlot)
+plot_model(fullbodysizeweevilmodel, type = "est", title = "",
+           group.terms = c(), 
+           order.terms = c(1,3,2), 
+           colors = c("grey"), 
+           rm.terms = c("speciesSteremnius carinatus", "round"),
+           axis.labels = c("Distance * \nS. carinatus", "Distance")) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+
 
 # (4b) carabid full bodysize model 
 hist(fullbodysizesexedcarabid.subset$median) #check distribution of response 
@@ -480,11 +512,13 @@ levels(fullbodysizesexedcarabid.subset$sex) #check levels of categorical variabl
 levels(fullbodysizesexedcarabid.subset$species) #check levels of categorical variables
 levels(fullbodysizesexedcarabid.subset[,"species"]) # check P. amethystinus first (intercept)
 fullbodysizesexedcarabid.subset$species = factor(fullbodysizesexedcarabid.subset$species, 
-                      levels(fullbodysizesexedcarabid.subset$species)[c(4,8,2,3,1,5,6,7,9)])
+                      levels(fullbodysizesexedcarabid.subset$species)[c(5,4,8,2,3,1,6,7,9)])
 levels(fullbodysizesexedcarabid.subset[, "sex"]) # check that F first (intercept)
 fullbodysizesexedcarabid.subset$sex = factor(fullbodysizesexedcarabid.subset$sex, levels(fullbodysizesexedcarabid.subset$sex)[c(1,2)])
-str(fullbodysizesexedcarabid.subset) #check 'round' is ordinal
-fullbodysizesexedcarabid.subset$round <- ordered(fullbodysizesexedcarabid.subset$round, levels = 1:4, labels=c("1", "2", "3", "4"))
+str(fullbodysizecarabid.subset) #we decided to have 'round' as an INTEGER - but note not important any way though
+fullbodysizecarabid.subset$round <- as.integer(fullbodysizecarabid.subset$round)  
+fullbodysizecarabid.subset$round <- as.ordered(fullbodysizecarabid.subset$round)
+fullbodysizecarabid.subset$round <- as.factor(fullbodysizecarabid.subset$round)
 
 fullbodysizecarabidmodel <- lmer(median ~ distance*species + sex + round + (1|transect), 
                                  data = fullbodysizesexedcarabid.subset)
@@ -519,15 +553,43 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# (4b) coefficient plot with parameters with strong effects in black, 
-# and parameters with weak/no effect in grey
+# (4b) full coefficient plot for Supplemental 
+#parameters with strong effects in black, parameters with weak/no effect in grey
 library(sjPlot)
 plot_model(fullbodysizecarabidmodel, type = "est", title = "",
-           group.terms = c(), 
-           order.terms = c(), 
-           colors = c("black"), 
-           axis.labels = c("")) +
+           group.terms = c(1,2,2,2,2,2,1,1,1,1,1), 
+           order.terms = c(1,8,9,10,11,7,6,2,3,4,5), 
+           colors = c("grey", "black"), 
+           wrap.labels = 50,
+           axis.labels = c("Z. matthewsii", "S. angusticollis", "P. crenicollis", "C. tuberculatus", 
+                           "Sex = Male", "Sampling \nRound", 
+                           "Distance * \n Z. matthewsii", 
+                           "Distance * \n S. angusticollis", 
+                           "Distance * \n P. crenicollis", 
+                           "Distance * \n C. tuberculatus", 
+                           "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
+
+
+# (4b) select coefficient plot for Body Text 
+#parameters with strong effects in black, parameters with weak/no effect in grey
+## 'sampling round' and 'species' removed
+library(sjPlot)
+plot_model(fullbodysizecarabidmodel, type = "est", title = "",
+           group.terms = c(1,2,1,1,1,1), 
+           order.terms = c(1,3,4,5,6,2), 
+           colors = c("grey", "black"), 
+           wrap.labels = 50,
+           rm.terms = c("round","speciesCychrus tuberculatus","speciesPterostichus crenicollis", 
+                        "speciesScaphinotus angusticollis","speciesZacotus matthewsii"),
+           axis.labels = c("Sex = Male", 
+                           "Distance * \nZ. matthewsii", 
+                           "Distance * \nS. angusticollis", 
+                           "Distance * \nP. crenicollis", 
+                           "Distance * \nC. tuberculatus", 
+                           "Distance")) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
+
 
 #### 5. POST HOC (SIA) ####
 
