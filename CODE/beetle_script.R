@@ -253,7 +253,7 @@ testResiduals(sim)
 # (2a) coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
- plot_model(weevilbodynmodel, type = "est", title = "", 
+ plot_model(weevilbodynmodel, type = "std2", title = "", 
            group.terms = c(1), order.terms = c(1), colors = c("black"), 
            axis.labels = c("Distance"), axis.lim = c(-1,1)) + 
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
@@ -295,7 +295,7 @@ testResiduals(sim)
 # (2b) coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(carabidbodynmodel, type = "est", title = "", 
+plot_model(carabidbodynmodel, type = "std2", title = "", 
            group.terms = c(1), order.terms = c(1), colors = c("grey"), 
            axis.labels = c("Distance"), axis.lim = c(-1,1)) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
@@ -453,7 +453,7 @@ testResiduals(sim)
 # (3a) coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(weevilbodysizemodel, type = "est", title = "", 
+plot_model(weevilbodysizemodel, type = "std2", title = "", 
            group.terms = c(1), order.terms = c(1), colors = c("grey"), 
            axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
@@ -494,7 +494,7 @@ testResiduals(sim)
 # (3b) coefficient plot with parameters with strong effects in black, 
 # and parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(carabidbodysizemodel, type = "est", title = "", 
+plot_model(carabidbodysizemodel, type = "std2", title = "", 
            group.terms = c(1), order.terms = c(1), colors = c("grey"), 
            axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
@@ -582,6 +582,11 @@ p2 <- ggplot() +
 
 p1 + p2
 ggsave("FIGURES/fig4.png",  height=6, width=14, dpi = "retina")
+
+
+
+
+
 
 
 #### 4. BODY SIZE (FULL MODEL) ####
@@ -816,6 +821,7 @@ ggplot(sia.data, aes(bodyd15N, bodyncombust, color = species)) +
 hist(weevil.subset$bodyncombust) #check distribution of response
 levels(weevil.subset$trophic) #check levels of categorical variables
 weevilposthocmodel <- lm(bodyncombust ~ bodyd15N, data = weevil.subset)
+summary(weevilposthocmodel)
 
 # check residuals
 ggplot(weevil.subset, aes(x = fitted(weevilposthocmodel), y = resid(weevilposthocmodel))) +
