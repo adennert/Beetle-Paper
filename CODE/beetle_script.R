@@ -589,13 +589,12 @@ View(fullbodysizesexedcarabid.subset) #n=293
 # (4a) weevil full bodysize model
 hist(fullbodysizeweevil.subset$median) #check distribution of response 
 levels(fullbodysizeweevil.subset$species) #check levels of categorical variables
-levels(fullbodysizeweevil.subset[,"species"]) # check S. tuberosus first (intercept)
+levels(fullbodysizeweevil.subset[,"species"]) #make S. tuberosus first (intercept)
 fullbodysizeweevil.subset$species <- relevel(fullbodysizeweevil.subset$species,
                                              "Steremnius tuberosus")
-
+#make 'round' an integer - but note not important as a factor either
+fullbodysizeweevil.subset$round <- as.integer(fullbodysizeweevil.subset$round) 
 str(fullbodysizeweevil.subset) 
-#we decided to have 'round' as an INTEGER - but note not important any way though
-fullbodysizeweevil.subset$round <- as.integer(fullbodysizeweevil.subset$round)  
 
 fullbodysizeweevilmodel <- lmer(median ~ distance*species + round + 
                           (1|transect), data = fullbodysizeweevil.subset)
@@ -638,7 +637,7 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
            group.terms = c(1,2,1,1), 
            order.terms = c(1,4,3,2), 
            colors = c("grey","black"), 
-           axis.labels = c("S. carinatus", "Sampling \nRound", 
+           axis.labels = c("S. carinatus", "Sampling \nWeek", 
                            "Distance * \nS. carinatus", "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
@@ -652,7 +651,7 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
   #title4 <- expression("d")
 
   #my_y_title <- expression(paste("No. of ", italic("bacteria X"), 
-                               " isolates with corresponding types"))
+                              # " isolates with corresponding types"))
   #.... + labs(y=my_y_title)
 
 
@@ -661,11 +660,12 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
 # 'sampling round' and 'species' removed
 library(sjPlot)
 plot_model(fullbodysizeweevilmodel, type = "est", title = "",
-           group.terms = c(), 
-           order.terms = c(1,3), 
+           group.terms = c(1,1,1), 
+           order.terms = c(1,3,2), 
            colors = c("grey"), 
-           rm.terms = c("speciesSteremnius carinatus", "round"),
-           axis.labels = c("Distance * \nS. carinatus", "Distance")) +
+           rm.terms = c("speciesSteremnius carinatus"),
+           axis.labels = c("Sampling \nWeek", "Distance * \nS. carinatus", 
+                           "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
 
@@ -674,16 +674,15 @@ hist(fullbodysizesexedcarabid.subset$median) #check distribution of response
 levels(fullbodysizesexedcarabid.subset$sex) #check levels of categorical variables
 levels(fullbodysizesexedcarabid.subset$species) #check levels of categorical variables
 
-levels(fullbodysizesexedcarabid.subset[,"species"]) # check P. amethystinus first (intercept)
+levels(fullbodysizesexedcarabid.subset[,"species"]) #make P. amethystinus first (intercept) 
 fullbodysizesexedcarabid.subset$species <- 
   relevel(fullbodysizesexedcarabid.subset$species, "Pterostichus amethystinus")
 
-
-levels(fullbodysizesexedcarabid.subset[, "sex"]) # check that F first (intercept)
+levels(fullbodysizesexedcarabid.subset[, "sex"]) # make F first (intercept)
 fullbodysizesexedcarabid.subset$sex = factor(fullbodysizesexedcarabid.subset$sex, 
                                              levels(fullbodysizesexedcarabid.subset$sex)[c(1,2)])
 str(fullbodysizesexedcarabid.subset) 
-#we decided to have 'round' as an INTEGER - but note not important any way though
+#make 'round' an integer - but note not important as a factor either
 fullbodysizecarabid.subset$round <- as.integer(fullbodysizecarabid.subset$round)  
 
 fullbodysizecarabidmodel <- lmer(median ~ distance*species + sex + round + (1|transect), 
@@ -731,7 +730,7 @@ plot_model(fullbodysizecarabidmodel, type = "est", title = "",
            wrap.labels = 50,
            axis.labels = c("Z. matthewsii", "S. angusticollis", "P. crenicollis", 
                            "C. tuberculatus", 
-                           "Sex = Male", "Sampling \nRound", 
+                           "Sex = Male", "Sampling \nWeek", 
                            "Distance * \n Z. matthewsii", 
                            "Distance * \n S. angusticollis", 
                            "Distance * \n P. crenicollis", 
@@ -745,14 +744,14 @@ plot_model(fullbodysizecarabidmodel, type = "est", title = "",
 ## 'sampling round' and 'species' removed
 library(sjPlot)
 plot_model(fullbodysizecarabidmodel, type = "est", title = "",
-           group.terms = c(1,2,1,1,1,1), 
-           order.terms = c(1,3,4,5,6,2), 
+           group.terms = c(1,2,1,1,1,1,1), 
+           order.terms = c(1,3,4,5,6,7,2), 
            colors = c("grey", "black"), 
            wrap.labels = 50,
-           rm.terms = c("round","speciesCychrus tuberculatus",
+           rm.terms = c("speciesCychrus tuberculatus",
                         "speciesPterostichus crenicollis", 
                         "speciesScaphinotus angusticollis","speciesZacotus matthewsii"),
-           axis.labels = c("Sex = Male", 
+           axis.labels = c("Sex = Male", "Sampling \nWeek",
                            "Distance * \nZ. matthewsii", 
                            "Distance * \nS. angusticollis", 
                            "Distance * \nP. crenicollis", 
@@ -844,8 +843,6 @@ p2 <- ggplot() +
 
 (p1 | p2)/(p3 | p4)
 ggsave("FIGURES/fig5.png",  height=6, width=14, dpi = "retina")
-
-
 
 
 #### 5. POST HOC (SIA) ####
