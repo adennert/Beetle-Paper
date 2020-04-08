@@ -2,6 +2,7 @@
 ####Originally written in fall 2018 by NR; updated in spring 2020 by NR and AD
 ####For submission to Ecology & Evolution
 #TEST merge, 26 March 2020 3:46 pm
+#TEST NR, 8 April 2020 11:08 AM
 
 #### Libraries ####
 
@@ -250,6 +251,14 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
+# (2a) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
+library(sjPlot)
+ plot_model(weevilbodynmodel, type = "std2", title = "", 
+           group.terms = c(1), order.terms = c(1), colors = c("black"), 
+           axis.labels = c("Distance"), axis.lim = c(-1,1)) + 
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+
 # (2b) carabid body N model - using carabid.subset
 hist(carabid.subset$bodyd15N) #check distribution of response
 levels(carabid.subset$trophic) #check levels of categorical variables
@@ -283,6 +292,14 @@ testOutliers(sim)
 testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
+
+# (2b) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
+library(sjPlot)
+plot_model(carabidbodynmodel, type = "std2", title = "", 
+           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
+           axis.labels = c("Distance"), axis.lim = c(-1,1)) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
 # create plots showing the model predictions and raw data
 # create a new data frame to make model predictions
@@ -434,6 +451,14 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
+# (3a) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
+library(sjPlot)
+plot_model(weevilbodysizemodel, type = "std2", title = "", 
+           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
+           axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+
 # (3b) carabid body size SIA subset model - using carabid.subset
 hist(carabid.subset$median) #check distribution of response
 levels(carabid.subset$trophic) #check levels of categorical variables
@@ -467,6 +492,13 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
+# (3b) coefficient plot with parameters with strong effects in black, 
+# and parameters with weak/no effect in grey
+library(sjPlot)
+plot_model(carabidbodysizemodel, type = "std2", title = "", 
+           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
+           axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
+  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
 # create plots showing the model predictions and raw data
 # create a new data frame to make model predictions
@@ -529,7 +561,6 @@ p1 <- ggplot() +
   labs(tag = "A") +
   annotation_custom(grob = w) 
 
-
 # plot the carabid raw data points with carabid model on top
 p2 <- ggplot() +
   #add raw data points
@@ -552,6 +583,10 @@ p2 <- ggplot() +
 
 p1 + p2
 ggsave("FIGURES/fig4.png",  height=6, width=14, dpi = "retina")
+
+
+
+
 
 
 
@@ -649,8 +684,7 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
   #title3 <- expression("c")
   #title4 <- expression("d")
 
-  #my_y_title <- expression(paste("No. of ", italic("bacteria X"), 
-                               " isolates with corresponding types"))
+  #my_y_title <- expression(paste("No. of ", italic("bacteria X")," isolates with corresponding types"))
   #.... + labs(y=my_y_title)
 
 
