@@ -2,7 +2,6 @@
 ####Originally written in fall 2018 by NR; updated in spring 2020 by NR and AD
 ####For submission to Ecology & Evolution
 #TEST merge, 26 March 2020 3:46 pm
-#TEST NR, 8 April 2020 11:08 AM
 
 #### Libraries ####
 
@@ -251,14 +250,6 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# (2a) coefficient plot with parameters with strong effects in black, 
-# and parameters with weak/no effect in grey
-library(sjPlot)
- plot_model(weevilbodynmodel, type = "std2", title = "", 
-           group.terms = c(1), order.terms = c(1), colors = c("black"), 
-           axis.labels = c("Distance"), axis.lim = c(-1,1)) + 
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
-
 # (2b) carabid body N model - using carabid.subset
 hist(carabid.subset$bodyd15N) #check distribution of response
 levels(carabid.subset$trophic) #check levels of categorical variables
@@ -292,14 +283,6 @@ testOutliers(sim)
 testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
-
-# (2b) coefficient plot with parameters with strong effects in black, 
-# and parameters with weak/no effect in grey
-library(sjPlot)
-plot_model(carabidbodynmodel, type = "std2", title = "", 
-           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
-           axis.labels = c("Distance"), axis.lim = c(-1,1)) +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
 # create plots showing the model predictions and raw data
 # create a new data frame to make model predictions
@@ -451,14 +434,6 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# (3a) coefficient plot with parameters with strong effects in black, 
-# and parameters with weak/no effect in grey
-library(sjPlot)
-plot_model(weevilbodysizemodel, type = "std2", title = "", 
-           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
-           axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
-
 # (3b) carabid body size SIA subset model - using carabid.subset
 hist(carabid.subset$median) #check distribution of response
 levels(carabid.subset$trophic) #check levels of categorical variables
@@ -492,13 +467,6 @@ testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
-# (3b) coefficient plot with parameters with strong effects in black, 
-# and parameters with weak/no effect in grey
-library(sjPlot)
-plot_model(carabidbodysizemodel, type = "std2", title = "", 
-           group.terms = c(1), order.terms = c(1), colors = c("grey"), 
-           axis.labels = c(paste("Body δ15N (‰)")), axis.lim = c(-1,1)) +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
 # create plots showing the model predictions and raw data
 # create a new data frame to make model predictions
@@ -561,6 +529,7 @@ p1 <- ggplot() +
   labs(tag = "A") +
   annotation_custom(grob = w) 
 
+
 # plot the carabid raw data points with carabid model on top
 p2 <- ggplot() +
   #add raw data points
@@ -583,10 +552,6 @@ p2 <- ggplot() +
 
 p1 + p2
 ggsave("FIGURES/fig4.png",  height=6, width=14, dpi = "retina")
-
-
-
-
 
 
 
@@ -625,20 +590,20 @@ View(fullbodysizesexedcarabid.subset) #n=293
 hist(fullbodysizeweevil.subset$median) #check distribution of response 
 levels(fullbodysizeweevil.subset$species) #check levels of categorical variables
 levels(fullbodysizeweevil.subset[,"species"]) # check S. tuberosus first (intercept)
-fullbodysizeweevil.subset$species = factor(fullbodysizeweevil.subset$species, 
-  levels(fullbodysizeweevil.subset$species)[c(8,1,2,3,4,5,6,7,9)])
+fullbodysizeweevil.subset$species <- relevel(fullbodysizeweevil.subset$species,
+                                             "Steremnius tuberosus")
 
-str(fullbodysizeweevil.subset) #we decided to have 'round' as an INTEGER - but note not important any way though
+str(fullbodysizeweevil.subset) 
+#we decided to have 'round' as an INTEGER - but note not important any way though
 fullbodysizeweevil.subset$round <- as.integer(fullbodysizeweevil.subset$round)  
-fullbodysizeweevil.subset$round <- as.ordered(fullbodysizeweevil.subset$round)
-fullbodysizeweevil.subset$round <- as.factor(fullbodysizeweevil.subset$round)
 
 fullbodysizeweevilmodel <- lmer(median ~ distance*species + round + 
                           (1|transect), data = fullbodysizeweevil.subset)
 summary(fullbodysizeweevilmodel)
 
 # (4a) check residuals
-ggplot(fullbodysizeweevil.subset, aes(x = fitted(fullbodysizeweevilmodel), y = resid(fullbodysizeweevilmodel))) +
+ggplot(fullbodysizeweevil.subset, aes(x = fitted(fullbodysizeweevilmodel), 
+                                      y = resid(fullbodysizeweevilmodel))) +
   geom_point() +
   theme_classic() +
   geom_line(y=0, colour="red") +
@@ -651,7 +616,8 @@ qqline(as.vector(resid(fullbodysizeweevilmodel)), col = "blue")
 set.seed(1)
 # calculate scaled residuals
 library(DHARMa)
-sim <- simulateResiduals(fittedModel = fullbodysizeweevilmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
+sim <- simulateResiduals(fittedModel = fullbodysizeweevilmodel, n = 500) 
+# the calculated residuals are stored in sim$scaledResiduals
 # plot the scaled residuals (Observed vs Expected)
 plot(sim)
 # plot residuals against the other predictors
@@ -684,7 +650,8 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
   #title3 <- expression("c")
   #title4 <- expression("d")
 
-  #my_y_title <- expression(paste("No. of ", italic("bacteria X")," isolates with corresponding types"))
+  #my_y_title <- expression(paste("No. of ", italic("bacteria X"), 
+                               " isolates with corresponding types"))
   #.... + labs(y=my_y_title)
 
 
@@ -694,7 +661,7 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
 library(sjPlot)
 plot_model(fullbodysizeweevilmodel, type = "est", title = "",
            group.terms = c(), 
-           order.terms = c(1,3,2), 
+           order.terms = c(1,3), 
            colors = c("grey"), 
            rm.terms = c("speciesSteremnius carinatus", "round"),
            axis.labels = c("Distance * \nS. carinatus", "Distance")) +
@@ -706,21 +673,22 @@ hist(fullbodysizesexedcarabid.subset$median) #check distribution of response
 levels(fullbodysizesexedcarabid.subset$sex) #check levels of categorical variables
 levels(fullbodysizesexedcarabid.subset$species) #check levels of categorical variables
 levels(fullbodysizesexedcarabid.subset[,"species"]) # check P. amethystinus first (intercept)
-fullbodysizesexedcarabid.subset$species = factor(fullbodysizesexedcarabid.subset$species, 
-                      levels(fullbodysizesexedcarabid.subset$species)[c(5,4,8,2,3,1,6,7,9)])
+fullbodysizesexedcarabid.subset$species <- 
+  relevel(fullbodysizesexedcarabid.subset$species, "Pterostichus amethystinus")
 levels(fullbodysizesexedcarabid.subset[, "sex"]) # check that F first (intercept)
-fullbodysizesexedcarabid.subset$sex = factor(fullbodysizesexedcarabid.subset$sex, levels(fullbodysizesexedcarabid.subset$sex)[c(1,2)])
-str(fullbodysizecarabid.subset) #we decided to have 'round' as an INTEGER - but note not important any way though
+fullbodysizesexedcarabid.subset$sex = factor(fullbodysizesexedcarabid.subset$sex, 
+                                             levels(fullbodysizesexedcarabid.subset$sex)[c(1,2)])
+str(fullbodysizesexedcarabid.subset) 
+#we decided to have 'round' as an INTEGER - but note not important any way though
 fullbodysizecarabid.subset$round <- as.integer(fullbodysizecarabid.subset$round)  
-fullbodysizecarabid.subset$round <- as.ordered(fullbodysizecarabid.subset$round)
-fullbodysizecarabid.subset$round <- as.factor(fullbodysizecarabid.subset$round)
 
 fullbodysizecarabidmodel <- lmer(median ~ distance*species + sex + round + (1|transect), 
                                  data = fullbodysizesexedcarabid.subset)
 summary(fullbodysizecarabidmodel)
 
 # (4b) check residuals
-ggplot(fullbodysizesexedcarabid.subset, aes(x = fitted(fullbodysizecarabidmodel), y = resid(fullbodysizecarabidmodel))) +
+ggplot(fullbodysizesexedcarabid.subset, aes(x = fitted(fullbodysizecarabidmodel), 
+                                            y = resid(fullbodysizecarabidmodel))) +
   geom_point() +
   theme_classic() +
   geom_line(y=0, colour="red") +
@@ -733,7 +701,8 @@ qqline(as.vector(resid(fullbodysizecarabidmodel)), col = "blue")
 set.seed(1)
 # calculate scaled residuals
 library(DHARMa)
-sim <- simulateResiduals(fittedModel = fullbodysizecarabidmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
+sim <- simulateResiduals(fittedModel = fullbodysizecarabidmodel, n = 500) 
+# the calculated residuals are stored in sim$scaledResiduals
 # plot the scaled residuals (Observed vs Expected)
 plot(sim)
 # plot residuals against the other predictors
@@ -756,7 +725,8 @@ plot_model(fullbodysizecarabidmodel, type = "est", title = "",
            order.terms = c(1,8,9,10,11,7,6,2,3,4,5), 
            colors = c("grey", "black"), 
            wrap.labels = 50,
-           axis.labels = c("Z. matthewsii", "S. angusticollis", "P. crenicollis", "C. tuberculatus", 
+           axis.labels = c("Z. matthewsii", "S. angusticollis", "P. crenicollis", 
+                           "C. tuberculatus", 
                            "Sex = Male", "Sampling \nRound", 
                            "Distance * \n Z. matthewsii", 
                            "Distance * \n S. angusticollis", 
@@ -775,7 +745,8 @@ plot_model(fullbodysizecarabidmodel, type = "est", title = "",
            order.terms = c(1,3,4,5,6,2), 
            colors = c("grey", "black"), 
            wrap.labels = 50,
-           rm.terms = c("round","speciesCychrus tuberculatus","speciesPterostichus crenicollis", 
+           rm.terms = c("round","speciesCychrus tuberculatus",
+                        "speciesPterostichus crenicollis", 
                         "speciesScaphinotus angusticollis","speciesZacotus matthewsii"),
            axis.labels = c("Sex = Male", 
                            "Distance * \nZ. matthewsii", 
@@ -784,6 +755,93 @@ plot_model(fullbodysizecarabidmodel, type = "est", title = "",
                            "Distance * \nC. tuberculatus", 
                            "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
+
+# create plots showing the model predictions and raw data
+# create a new data frame to make model predictions
+newdat.fullbodysize.wee <- expand.grid(bodyd15N = with(fullbweevil.subset, 
+                                                   seq(min(bodyd15N), max(bodyd15N), 
+                                                       length.out = 28)))
+newdat.bodysize.car <- expand.grid(bodyd15N = with(carabid.subset, 
+                                                   seq(min(bodyd15N), max(bodyd15N), 
+                                                       length.out = 30)))
+# make model predictions with upr/lower confidence intervals for carabid model
+carsizemodelexp <- predict(carabidbodysizemodel, newdat.bodysize.car, type = "response", 
+                           se.fit = TRUE, re.form = NA, full = T)
+newdat.bodysize.car$car.fit <- carsizemodelexp$fit
+newdat.bodysize.car$car.lwr <- carsizemodelexp$fit - 1.96 * carsizemodelexp$se.fit
+newdat.bodysize.car$car.upr <- carsizemodelexp$fit + 1.96 * carsizemodelexp$se.fit
+
+# make model predictions with upr/lower confidence intervals for weevil model
+weesizemodelexp <- predict(weevilbodysizemodel, newdat.bodysize.wee, type = "response", 
+                           se.fit = TRUE, re.form = NA, full = T)
+newdat.bodysize.wee$wee.fit <- weesizemodelexp$fit
+newdat.bodysize.wee$wee.lwr <- weesizemodelexp$fit - 1.96 * weesizemodelexp$se.fit
+newdat.bodysize.wee$wee.upr <- weesizemodelexp$fit + 1.96 * weesizemodelexp$se.fit
+
+# Code to display the x-axis unstandardized
+#unstandardize <- function() {
+#function(x) format(x*sd(soiln.data$distance) + mean(soiln.data$distance), digits = 0) 
+#}
+
+# images downloaded under Creative Commons from phylopic.org
+wee.pic <- readPNG("FIGURES/weevil.png") 
+car.pic <- readPNG("FIGURES/carabid.png") 
+
+w <- rasterGrob(wee.pic, interpolate = TRUE, 
+                width=unit(1,'cm'),
+                x = unit(1,"npc"), y = unit(1,"npc"),
+                hjust = 1, vjust = 1)
+
+c <- rasterGrob(car.pic, interpolate = TRUE, 
+                width=unit(1.5,'cm'),
+                x = unit(1,"npc"), y = unit(1,"npc"),
+                hjust = 1, vjust = 1)
+
+# plot the weevil raw data points with weevil model on top
+p1 <- ggplot() +
+  #add raw data points
+  geom_point(data = weevil.subset, aes(x = bodyd15N, y = median), alpha = 0.6, 
+             pch = 16, size = 3, colour = "black") + 
+  theme_classic(30) + 
+  #add weevil model fit
+  geom_line(data = newdat.bodysize.wee, aes(x = bodyd15N, y = wee.fit), size = 1, 
+            colour = "black") +
+  geom_ribbon(data = newdat.bodysize.wee, aes(x = bodyd15N, ymin = wee.lwr, ymax = 
+                                                wee.upr), fill = "black", alpha = .25) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  coord_cartesian(ylim = c(4, 6)) +
+  labs(y="Elytron length (mm)", 
+       x = expression(paste("Body δ"^"15"*"N"*" (‰)"))) +
+  scale_y_continuous(breaks = c(4,5,6), label = c("4","5","6")) +
+  labs(tag = "A") +
+  annotation_custom(grob = w) 
+
+
+# plot the carabid raw data points with carabid model on top
+p2 <- ggplot() +
+  #add raw data points
+  geom_point(data = carabid.subset, aes(x = bodyd15N, y = median), alpha = 0.6, 
+             pch = 16, size = 3, colour = "black") + 
+  theme_classic(30) + 
+  #add carabid model fit
+  geom_line(data = newdat.bodysize.car, aes(x = bodyd15N, y = car.fit), size = 1, 
+            colour = "black") +
+  geom_ribbon(data = newdat.bodysize.car, aes(x = bodyd15N, ymin = car.lwr, ymax = 
+                                                car.upr), fill = "black", alpha = .25) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  coord_cartesian(ylim = c(8, 11)) +
+  labs(y="Elytron size (mm)", 
+       x = expression(paste("Body δ"^"15"*"N"*" (‰)"))) +
+  scale_y_continuous(breaks = c(8,9,10,11), label = c("8","9","10","11")) +
+  labs(tag = "B") +
+  annotation_custom(grob = c) 
+
+(p1 | p2)/(p3 | p4)
+ggsave("FIGURES/fig5.png",  height=6, width=14, dpi = "retina")
+
+
 
 
 #### 5. POST HOC (SIA) ####
