@@ -642,6 +642,7 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
                            "Distance * \nS. carinatus", "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
+
   # ? how to make part of the label italic? 
   # ? how to include expression object in axis.labels = 
   #title1 <- expression(paste("Distance *", italic("S. carinatus"))) 
@@ -672,9 +673,12 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
 hist(fullbodysizesexedcarabid.subset$median) #check distribution of response 
 levels(fullbodysizesexedcarabid.subset$sex) #check levels of categorical variables
 levels(fullbodysizesexedcarabid.subset$species) #check levels of categorical variables
+
 levels(fullbodysizesexedcarabid.subset[,"species"]) # check P. amethystinus first (intercept)
 fullbodysizesexedcarabid.subset$species <- 
   relevel(fullbodysizesexedcarabid.subset$species, "Pterostichus amethystinus")
+
+
 levels(fullbodysizesexedcarabid.subset[, "sex"]) # check that F first (intercept)
 fullbodysizesexedcarabid.subset$sex = factor(fullbodysizesexedcarabid.subset$sex, 
                                              levels(fullbodysizesexedcarabid.subset$sex)[c(1,2)])
