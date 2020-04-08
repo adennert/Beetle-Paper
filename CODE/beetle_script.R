@@ -628,10 +628,8 @@ levels(fullbodysizeweevil.subset[,"species"]) # check S. tuberosus first (interc
 fullbodysizeweevil.subset$species = factor(fullbodysizeweevil.subset$species, 
   levels(fullbodysizeweevil.subset$species)[c(8,1,2,3,4,5,6,7,9)])
 
-str(fullbodysizeweevil.subset) #we decided to have 'round' as an INTEGER - but note not important any way though
-fullbodysizeweevil.subset$round <- as.integer(fullbodysizeweevil.subset$round)  
-fullbodysizeweevil.subset$round <- as.ordered(fullbodysizeweevil.subset$round)
-fullbodysizeweevil.subset$round <- as.factor(fullbodysizeweevil.subset$round)
+str(fullbodysizeweevil.subset) #we decided to have 'round' as an INTEGER - but note not important as a factor either
+fullbodysizeweevil.subset$round <- as.integer(fullbodysizeweevil.subset$round) 
 
 fullbodysizeweevilmodel <- lmer(median ~ distance*species + round + 
                           (1|transect), data = fullbodysizeweevil.subset)
@@ -676,6 +674,7 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
                            "Distance * \nS. carinatus", "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
+
   # ? how to make part of the label italic? 
   # ? how to include expression object in axis.labels = 
   #title1 <- expression(paste("Distance *", italic("S. carinatus"))) 
@@ -694,7 +693,7 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
 library(sjPlot)
 plot_model(fullbodysizeweevilmodel, type = "est", title = "",
            group.terms = c(), 
-           order.terms = c(1,3,2), 
+           order.terms = c(1,3), 
            colors = c("grey"), 
            rm.terms = c("speciesSteremnius carinatus", "round"),
            axis.labels = c("Distance * \nS. carinatus", "Distance")) +
@@ -705,15 +704,13 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
 hist(fullbodysizesexedcarabid.subset$median) #check distribution of response 
 levels(fullbodysizesexedcarabid.subset$sex) #check levels of categorical variables
 levels(fullbodysizesexedcarabid.subset$species) #check levels of categorical variables
-levels(fullbodysizesexedcarabid.subset[,"species"]) # check P. amethystinus first (intercept)
+levels(fullbodysizesexedcarabid.subset[,"species"]) #check P. amethystinus first (intercept)
 fullbodysizesexedcarabid.subset$species = factor(fullbodysizesexedcarabid.subset$species, 
-                      levels(fullbodysizesexedcarabid.subset$species)[c(5,4,8,2,3,1,6,7,9)])
+                      levels(fullbodysizesexedcarabid.subset$species)[c(2,5,4,8,3,1,6,7,9)])
 levels(fullbodysizesexedcarabid.subset[, "sex"]) # check that F first (intercept)
 fullbodysizesexedcarabid.subset$sex = factor(fullbodysizesexedcarabid.subset$sex, levels(fullbodysizesexedcarabid.subset$sex)[c(1,2)])
 str(fullbodysizecarabid.subset) #we decided to have 'round' as an INTEGER - but note not important any way though
 fullbodysizecarabid.subset$round <- as.integer(fullbodysizecarabid.subset$round)  
-fullbodysizecarabid.subset$round <- as.ordered(fullbodysizecarabid.subset$round)
-fullbodysizecarabid.subset$round <- as.factor(fullbodysizecarabid.subset$round)
 
 fullbodysizecarabidmodel <- lmer(median ~ distance*species + sex + round + (1|transect), 
                                  data = fullbodysizesexedcarabid.subset)
