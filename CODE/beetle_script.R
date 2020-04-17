@@ -34,8 +34,6 @@ library(png)
 library(grid)
 
 
-
-
 #### 0. REPEATABILITY ####
 # dataset
 repeat.data <- read.csv("DATA/(0) repeat.csv", header = TRUE, ",", strip.white = TRUE)
