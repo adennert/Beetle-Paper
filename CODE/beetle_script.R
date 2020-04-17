@@ -760,20 +760,30 @@ plot_model(fullbodysizecarabidmodel, type = "est", title = "",
                            "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
+
 # create plots showing the model predictions and raw data
 # create a new data frame to make model predictions
-newdat.fullbodysize.wee <- expand.grid(bodyd15N = with(fullbweevil.subset, 
-                                                   seq(min(bodyd15N), max(bodyd15N), 
-                                                       length.out = 28)))
-newdat.bodysize.car <- expand.grid(bodyd15N = with(carabid.subset, 
-                                                   seq(min(bodyd15N), max(bodyd15N), 
-                                                       length.out = 30)))
+newdat.fullbodysize.wee <- expand.grid(bodyd15N = with(fullbodysizeweevil.subset, 
+                                                   seq(min(distance), max(distance), 
+                                                       length.out = 1010)))
+newdat.fullbodysize.car <- expand.grid(distance = with(fullbodysizesexedcarabid.subset, 
+                                                   seq(min(distance), max(distance), 
+                                                       length.out = 30)),
+                                      # species = 
+                                       #  fullbodysizesexedcarabid.subset$species, 
+                                       #round = 
+                                        # mean(fullbodysizesexedcarabid.subset$round),
+                                       sex = levels(fullbodysizesexedcarabid.subset$sex))
+
 # make model predictions with upr/lower confidence intervals for carabid model
-carsizemodelexp <- predict(carabidbodysizemodel, newdat.bodysize.car, type = "response", 
+carfullsizemodelexp <- predict(fullbodysizecarabidmodel, newdat.fullbodysize.car, 
+                               type = "response", 
                            se.fit = TRUE, re.form = NA, full = T)
-newdat.bodysize.car$car.fit <- carsizemodelexp$fit
-newdat.bodysize.car$car.lwr <- carsizemodelexp$fit - 1.96 * carsizemodelexp$se.fit
-newdat.bodysize.car$car.upr <- carsizemodelexp$fit + 1.96 * carsizemodelexp$se.fit
+newdat.fullbodysize.car$car.fit <- carfullsizemodelexp$fit
+newdat.fullbodysize.car$car.lwr <- carfullsizemodelexp$fit - 1.96 * 
+  carfullsizemodelexp$se.fit
+newdat.fullbodysize.car$car.upr <- carfullsizemodelexp$fit + 1.96 *
+  carfullsizemodelexp$se.fit
 
 # make model predictions with upr/lower confidence intervals for weevil model
 weesizemodelexp <- predict(weevilbodysizemodel, newdat.bodysize.wee, type = "response", 
