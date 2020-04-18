@@ -1,8 +1,6 @@
 ####R Script for Beetle Paper
 ####Originally written in fall 2018 by NR; updated in spring 2020 by NR and AD
 ####For submission to Ecology & Evolution
-#TEST merge, 26 March 2020 3:46 pm
-#TEST 17 April 2020 NR
 
 #### Libraries ####
 
@@ -33,7 +31,8 @@ library(patchwork)
 library(png)
 #install.packages("grid")
 library(grid)
-
+#install.packages("dplyr")
+library(dplyr)
 
 #### 0. REPEATABILITY ####
 # dataset
@@ -761,16 +760,19 @@ plot_model(fullbodysizecarabidmodel, type = "est", title = "",
 
 # create plots showing the model predictions and raw data
 # create a new data frame to make model predictions
-newdat.fullbodysize.wee <- expand.grid(bodyd15N = with(fullbodysizeweevil.subset, 
+newdat.fullbodysize.wee <- expand.grid(distance = with(fullbodysizeweevil.subset, 
                                                    seq(min(distance), max(distance), 
-                                                       length.out = 1010)))
+                                                       length.out = 100)),
+                                       species = fullbodysizeweevil.subset$species, 
+                                       round = mean(fullbodysizeweevil.subset$round))
+
 newdat.fullbodysize.car <- expand.grid(distance = with(fullbodysizesexedcarabid.subset, 
                                                    seq(min(distance), max(distance), 
-                                                       length.out = 30)),
-                                      # species = 
-                                       #  fullbodysizesexedcarabid.subset$species, 
-                                       #round = 
-                                        # mean(fullbodysizesexedcarabid.subset$round),
+                                                       length.out = 3)),
+                                      species = 
+                                       fullbodysizesexedcarabid.subset$species, 
+                                       round = 
+                                        mean(fullbodysizesexedcarabid.subset$round),
                                        sex = levels(fullbodysizesexedcarabid.subset$sex))
 
 # make model predictions with upr/lower confidence intervals for carabid model
@@ -959,6 +961,8 @@ newdat.post.wee <- expand.grid(bodyd15N = with(weevil.subset,
 newdat.post.car <- expand.grid(bodyd15N = with(carabid.subset, 
                                                    seq(min(bodyd15N), max(bodyd15N), 
                                                        length.out = 30)))
+
+
 # make model predictions with upr/lower confidence intervals for carabid model
 carpostmodelexp <- predict(carabidposthocmodel, newdat.post.car, type = "response", 
                            se.fit = TRUE, re.form = NA, full = T)
