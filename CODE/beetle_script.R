@@ -568,7 +568,6 @@ bodysize.data$distance.std <- c(scale(bodysize.data$distance, center = TRUE,
                                       scale = TRUE))
 bodysize.data$round.std <- c(scale(bodysize.data$round, center = TRUE, 
                                       scale = TRUE))
-
 str(bodysize.data)
 
 # subsets
@@ -647,7 +646,6 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
                            "Distance * \nS. carinatus", "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
 
-
   # ? how to make part of the label italic? 
   # ? how to include expression object in axis.labels = 
   #title1 <- expression(paste("Distance *", italic("S. carinatus"))) 
@@ -673,7 +671,6 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
            axis.labels = c("Sampling \nWeek", "Distance * \nS. carinatus", 
                            "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
-
 
 # (4b) carabid full bodysize model 
 hist(fullbodysizesexedcarabid.subset$median) #check distribution of response 
