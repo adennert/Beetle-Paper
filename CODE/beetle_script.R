@@ -766,23 +766,26 @@ plot_model(fullbodysizecarabidmodel, type = "est", title = "",
 
 # create plots showing the model predictions and raw data
 # create a new data frame to make model predictions
-newdat.fullbodysize.wee <- expand.grid(distance = with(fullbodysizeweevil.subset, 
-                                                   seq(min(distance), max(distance), 
-                                                       length.out = 100)),
-                                       species = fullbodysizeweevil.subset$species, 
-                                       round = mean(fullbodysizeweevil.subset$round))
+newdat.fullbodysize.wee <- expand.grid(distance.std = with(fullbodysizeweevil.subset, 
+                                                   seq(min(distance.std), max(distance.std), 
+                                                       length.out = 505)),
+                                       species = unique(fullbodysizeweevil.subset$species), 
+                                       round.std = mean(fullbodysizeweevil.subset$round.std),
+                                       transect = unique(fullbodysizeweevil.subset$transect))
 
-newdat.fullbodysize.car <- expand.grid(distance = with(fullbodysizesexedcarabid.subset, 
-                                                   seq(min(distance), max(distance), 
-                                                       length.out = 3)),
+newdat.fullbodysize.car <- expand.grid(distance.std = with(fullbodysizesexedcarabid.subset, 
+                                                   seq(min(distance.std), max(distance.std), 
+                                                       length.out = 30)),
                                       species = 
-                                       fullbodysizesexedcarabid.subset$species, 
-                                       round = 
-                                        mean(fullbodysizesexedcarabid.subset$round),
-                                       sex = levels(fullbodysizesexedcarabid.subset$sex))
+                                       unique(fullbodysizesexedcarabid.subset$species), 
+                                       round.std = 
+                                        mean(fullbodysizesexedcarabid.subset$round.std),
+                                       sex = unique(fullbodysizesexedcarabid.subset$sex),
+                                      transect = unique(fullbodysizeweevil.subset$transect))
 
 # make model predictions with upr/lower confidence intervals for carabid model
-carfullsizemodelexp <- predict(fullbodysizecarabidmodel, newdat.fullbodysize.car, 
+carfullsizemodelexp <- predict(fullbodysizecarabidmodel, #newdata = 
+                                 #newdat.fullbodysize.car, 
                                type = "response", 
                            se.fit = TRUE, re.form = NA, full = T)
 newdat.fullbodysize.car$car.fit <- carfullsizemodelexp$fit
@@ -792,7 +795,9 @@ newdat.fullbodysize.car$car.upr <- carfullsizemodelexp$fit + 1.96 *
   carfullsizemodelexp$se.fit
 
 # make model predictions with upr/lower confidence intervals for weevil model
-weesizemodelexp <- predict(weevilbodysizemodel, newdat.bodysize.wee, type = "response", 
+weesizemodelexp <- predict(weevilbodysizemodel, 
+                           #newdata =newdat.bodysize.wee, 
+                           type = "response", 
                            se.fit = TRUE, re.form = NA, full = T)
 newdat.bodysize.wee$wee.fit <- weesizemodelexp$fit
 newdat.bodysize.wee$wee.lwr <- weesizemodelexp$fit - 1.96 * weesizemodelexp$se.fit
