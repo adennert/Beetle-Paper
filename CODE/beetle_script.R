@@ -362,7 +362,7 @@ p2 <- ggplot() +
   scale_x_continuous(breaks = c(0, 25, 50), label = c("0", "25", "50")) +
   scale_y_continuous(breaks = c(0,4,8,12), label = c("0","4","8","12")) +
   labs(tag = "B") +
-  annotation_custom(grob = c) 
+  annotation_custom(grob = c)
 
 p1 + p2
 ggsave("FIGURES/fig3.png",  height=6, width=14, dpi = "retina")
