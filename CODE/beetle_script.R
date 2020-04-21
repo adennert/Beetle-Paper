@@ -67,7 +67,7 @@ VarCorr(repeatmodel)
 # dataset
 soiln.data <- read.csv("DATA/(1) soiln.csv", header = TRUE, ",", strip.white = TRUE)
 View(soiln.data)
-str(soiln.data) #check that distance is an integer or numeric
+str(soiln.data) #check that distance is an integer
 levels(soiln.data$transect) #check levels of categorical variable
 summary(soiln.data)
 names(soiln.data)
