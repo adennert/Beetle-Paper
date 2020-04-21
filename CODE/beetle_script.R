@@ -562,6 +562,15 @@ str(bodysize.data)
 summary(bodysize.data)
 names(bodysize.data)
 
+# must standardize sampling round and distance variables as they are both 
+#continuous with differing variance, range, and units
+bodysize.data$distance.std <- c(scale(bodysize.data$distance, center = TRUE, 
+                                      scale = TRUE))
+bodysize.data$round.std <- c(scale(bodysize.data$round, center = TRUE, 
+                                      scale = TRUE))
+
+str(bodysize.data)
+
 # subsets
 library(dplyr)
 #weevil subset:
@@ -582,19 +591,18 @@ fullbodysizecarabid.subset <- filter(bodysize.data, species %in% c("Cychrus tube
 fullbodysizesexedcarabid.subset <- filter(fullbodysizecarabid.subset, sex %in% c("F", "M"))
 View(fullbodysizesexedcarabid.subset) #n=293
 
-
-
 # (4a) weevil full bodysize model
 hist(fullbodysizeweevil.subset$median) #check distribution of response 
 levels(fullbodysizeweevil.subset$species) #check levels of categorical variables
 levels(fullbodysizeweevil.subset[,"species"]) #make S. tuberosus first (intercept)
 fullbodysizeweevil.subset$species <- relevel(fullbodysizeweevil.subset$species,
                                              "Steremnius tuberosus")
+
 #make 'round' an integer - but note not important as a factor either
 fullbodysizeweevil.subset$round <- as.integer(fullbodysizeweevil.subset$round) 
 str(fullbodysizeweevil.subset) 
 
-fullbodysizeweevilmodel <- lmer(median ~ distance*species + round + 
+fullbodysizeweevilmodel <- lmer(median ~ distance.std*species + round.std + 
                           (1|transect), data = fullbodysizeweevil.subset)
 summary(fullbodysizeweevilmodel)
 
@@ -618,9 +626,9 @@ sim <- simulateResiduals(fittedModel = fullbodysizeweevilmodel, n = 500)
 # plot the scaled residuals (Observed vs Expected)
 plot(sim)
 # plot residuals against the other predictors
-plotResiduals(fullbodysizeweevil.subset$distance, sim$scaledResiduals) 
+plotResiduals(fullbodysizeweevil.subset$distance.std, sim$scaledResiduals) 
 plotResiduals(fullbodysizeweevil.subset$species, sim$scaledResiduals) 
-plotResiduals(fullbodysizeweevil.subset$round, sim$scaledResiduals)
+plotResiduals(fullbodysizeweevil.subset$round.std, sim$scaledResiduals)
 # test outliers
 testOutliers(sim)
 # test dispersion 
@@ -683,7 +691,8 @@ str(fullbodysizesexedcarabid.subset)
 #make 'round' an integer - but note not important as a factor either
 fullbodysizecarabid.subset$round <- as.integer(fullbodysizecarabid.subset$round)  
 
-fullbodysizecarabidmodel <- lmer(median ~ distance*species + sex + round + (1|transect), 
+fullbodysizecarabidmodel <- lmer(median ~ distance.std*species + sex + round.std 
+                                 + (1|transect), 
                                  data = fullbodysizesexedcarabid.subset)
 summary(fullbodysizecarabidmodel)
 
@@ -707,10 +716,10 @@ sim <- simulateResiduals(fittedModel = fullbodysizecarabidmodel, n = 500)
 # plot the scaled residuals (Observed vs Expected)
 plot(sim)
 # plot residuals against the other predictors
-plotResiduals(fullbodysizesexedcarabid.subset$distance, sim$scaledResiduals) 
+plotResiduals(fullbodysizesexedcarabid.subset$distance.std, sim$scaledResiduals) 
 plotResiduals(fullbodysizesexedcarabid.subset$species, sim$scaledResiduals) 
 plotResiduals(fullbodysizesexedcarabid.subset$sex, sim$scaledResiduals)
-plotResiduals(fullbodysizesexedcarabid.subset$round, sim$scaledResiduals)
+plotResiduals(fullbodysizesexedcarabid.subset$round.std, sim$scaledResiduals)
 # test outliers
 testOutliers(sim)
 # test dispersion 
