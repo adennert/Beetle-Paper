@@ -580,15 +580,15 @@ fullbodysizeweevil.subset <- filter(bodysize.data, species %in% c("Steremnius tu
 View(fullbodysizeweevil.subset) #n=1010
 
 #carabid subset:
-#create a subset that includes all SEXED carabids EXCEPT L. ferruginosus (n=2)
+#create a subset that includes all SEXED carabids 
+# (EXCEPT L. ferruginosus (n=2) and C. tuberculatus (n=3))
 # because insuffient sample size to estimate model parameters for this species
-fullbodysizecarabid.subset <- filter(bodysize.data, species %in% c("Cychrus tuberculatus",
-                                                                   "Pterostichus amethystinus",
+fullbodysizecarabid.subset <- filter(bodysize.data, species %in% c("Pterostichus amethystinus",
                                                                    "Pterostichus crenicollis",
                                                                    "Scaphinotus angusticollis",
                                                                    "Zacotus matthewsii"))
 fullbodysizesexedcarabid.subset <- filter(fullbodysizecarabid.subset, sex %in% c("F", "M"))
-View(fullbodysizesexedcarabid.subset) #n=293
+View(fullbodysizesexedcarabid.subset) #n=290
 
 # (4a) weevil full bodysize model
 hist(fullbodysizeweevil.subset$median) #check distribution of response 
@@ -645,19 +645,6 @@ plot_model(fullbodysizeweevilmodel, type = "est", title = "",
            axis.labels = c("S. carinatus", "Sampling \nWeek", 
                            "Distance * \nS. carinatus", "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
-
-  # ? how to make part of the label italic? 
-  # ? how to include expression object in axis.labels = 
-  #title1 <- expression(paste("Distance *", italic("S. carinatus"))) 
-  #title1 <- expression("S. carinatus")
-  #title2 <- expression("b")
-  #title3 <- expression("c")
-  #title4 <- expression("d")
-
-  #my_y_title <- expression(paste("No. of ", italic("bacteria X"), 
-                              # " isolates with corresponding types"))
-  #.... + labs(y=my_y_title)
-
 
 # (4a) select coefficient plot for Body Text
 # parameters with strong effects in black, parameters with weak/no effect in grey
@@ -728,41 +715,40 @@ testResiduals(sim)
 #parameters with strong effects in black, parameters with weak/no effect in grey
 library(sjPlot)
 plot_model(fullbodysizecarabidmodel, type = "est", title = "",
-           group.terms = c(1,2,2,2,2,2,1,1,1,1,1), 
-           order.terms = c(1,8,9,10,11,7,6,2,3,4,5), 
+           group.terms = c(1,2,2,2,2,1,1,1,1), 
+           order.terms = c(1,7,8,9,6,5,2,3,4), 
            colors = c("grey", "black"), 
            wrap.labels = 50,
-           axis.labels = c("Z. matthewsii", "S. angusticollis", "P. crenicollis", 
-                           "C. tuberculatus", 
-                           "Sex = Male", "Sampling \nWeek", 
+           rm.terms = c(),
+           axis.labels = c("Z. matthewsii", 
+                           "S. angusticollis", 
+                           "P. crenicollis", 
+                           "Sex: Male", 
+                           "Sampling \n Week", 
                            "Distance * \n Z. matthewsii", 
                            "Distance * \n S. angusticollis", 
                            "Distance * \n P. crenicollis", 
-                           "Distance * \n C. tuberculatus", 
                            "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
 
-
-# (4b) select coefficient plot for Body Text 
+#(4b) select coefficient plot for Body Text 
 #parameters with strong effects in black, parameters with weak/no effect in grey
-## 'sampling round' and 'species' removed
 library(sjPlot)
 plot_model(fullbodysizecarabidmodel, type = "est", title = "",
-           group.terms = c(1,2,1,1,1,1,1), 
-           order.terms = c(1,3,4,5,6,7,2), 
+           group.terms = c(1,2,1,1,1,1), 
+           order.terms = c(1,4,5,6,3,2), 
            colors = c("grey", "black"), 
            wrap.labels = 50,
-           rm.terms = c("speciesCychrus tuberculatus",
-                        "speciesPterostichus crenicollis", 
-                        "speciesScaphinotus angusticollis","speciesZacotus matthewsii"),
-           axis.labels = c("Sex = Male", "Sampling \nWeek",
-                           "Distance * \nZ. matthewsii", 
-                           "Distance * \nS. angusticollis", 
-                           "Distance * \nP. crenicollis", 
-                           "Distance * \nC. tuberculatus", 
+           rm.terms = c("speciesPterostichus crenicollis", 
+                        "speciesScaphinotus angusticollis",
+                        "speciesZacotus matthewsii"),
+           axis.labels = c("Sex: Male", 
+                           "Sampling \n Week", 
+                           "Distance * \n Z. matthewsii", 
+                           "Distance * \n S. angusticollis", 
+                           "Distance * \n P. crenicollis", 
                            "Distance")) +
   theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
-
 
 # create plots showing the model predictions and raw data
 # create a new data frame to make model predictions
