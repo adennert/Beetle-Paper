@@ -2,7 +2,7 @@
 ####Originally written in fall 2018 by NR; updated in spring 2020 by NR and AD
 ####For submission to Ecology & Evolution
 
-#### Libraries ####
+#### Library Loading & Set-up ####
 
 #install.packages("datasets")
 library(datasets)
@@ -33,6 +33,21 @@ library(png)
 library(grid)
 #install.packages("dplyr")
 library(dplyr)
+
+## load figure silohouettes of weevils and carabids
+## images downloaded under Creative Commons from phylopic.org
+wee.pic <- readPNG("FIGURES/weevil.png") 
+car.pic <- readPNG("FIGURES/carabid.png") 
+
+w <- rasterGrob(wee.pic, interpolate = TRUE, 
+                width=unit(1,'cm'),
+                x = unit(1,"npc"), y = unit(1,"npc"),
+                hjust = 1, vjust = 1)
+
+c <- rasterGrob(car.pic, interpolate = TRUE, 
+                width=unit(1.5,'cm'),
+                x = unit(1,"npc"), y = unit(1,"npc"),
+                hjust = 1, vjust = 1)
 
 #### 0. REPEATABILITY ####
 # dataset
@@ -151,10 +166,6 @@ newdat.soil$fit <- modelexp$fit
 newdat.soil$lwr <- modelexp$fit - 1.96 * modelexp$se.fit
 newdat.soil$upr <- modelexp$fit + 1.96 * modelexp$se.fit
 
-# Code to display the x-axis unstandardized
-#unstandardize <- function() {
-  #function(x) format(x*sd(soiln.data$distance) + mean(soiln.data$distance), digits = 0) 
-#}
 
 # plot the raw data points with model on top
 # note that moisture is displayed held at its mean
@@ -301,26 +312,6 @@ weemodelexp <- predict(weevilbodynmodel, newdat.bodyn, type = "response",
 newdat.bodyn$wee.fit <- weemodelexp$fit
 newdat.bodyn$wee.lwr <- weemodelexp$fit - 1.96 * weemodelexp$se.fit
 newdat.bodyn$wee.upr <- weemodelexp$fit + 1.96 * weemodelexp$se.fit
-
-# Code to display the x-axis unstandardized
-#unstandardize <- function() {
-#function(x) format(x*sd(soiln.data$distance) + mean(soiln.data$distance), digits = 0) 
-#}
-
-# images downloaded under Creative Commons from phylopic.org
-wee.pic <- readPNG("FIGURES/weevil.png") 
-car.pic <- readPNG("FIGURES/carabid.png") 
-
-w <- rasterGrob(wee.pic, interpolate = TRUE, 
-                width=unit(1,'cm'),
-                x = unit(1,"npc"), y = unit(1,"npc"),
-                hjust = 1, vjust = 1)
-
-c <- rasterGrob(car.pic, interpolate = TRUE, 
-                width=unit(1.5,'cm'),
-                x = unit(1,"npc"), y = unit(1,"npc"),
-                hjust = 1, vjust = 1)
-
 
 # plot the weevil raw data points with weevil model on top
 p1 <- ggplot() +
@@ -474,6 +465,7 @@ newdat.bodysize.wee <- expand.grid(bodyd15N = with(weevil.subset,
 newdat.bodysize.car <- expand.grid(bodyd15N = with(carabid.subset, 
                                                    seq(min(bodyd15N), max(bodyd15N), 
                                                        length.out = 30)))
+
 # make model predictions with upr/lower confidence intervals for carabid model
 carsizemodelexp <- predict(carabidbodysizemodel, newdat.bodysize.car, type = "response", 
                        se.fit = TRUE, re.form = NA, full = T)
@@ -487,25 +479,6 @@ weesizemodelexp <- predict(weevilbodysizemodel, newdat.bodysize.wee, type = "res
 newdat.bodysize.wee$wee.fit <- weesizemodelexp$fit
 newdat.bodysize.wee$wee.lwr <- weesizemodelexp$fit - 1.96 * weesizemodelexp$se.fit
 newdat.bodysize.wee$wee.upr <- weesizemodelexp$fit + 1.96 * weesizemodelexp$se.fit
-
-# Code to display the x-axis unstandardized
-#unstandardize <- function() {
-#function(x) format(x*sd(soiln.data$distance) + mean(soiln.data$distance), digits = 0) 
-#}
-
-# images downloaded under Creative Commons from phylopic.org
-wee.pic <- readPNG("FIGURES/weevil.png") 
-car.pic <- readPNG("FIGURES/carabid.png") 
-
-w <- rasterGrob(wee.pic, interpolate = TRUE, 
-                width=unit(1,'cm'),
-                x = unit(1,"npc"), y = unit(1,"npc"),
-                hjust = 1, vjust = 1)
-
-c <- rasterGrob(car.pic, interpolate = TRUE, 
-                width=unit(1.5,'cm'),
-                x = unit(1,"npc"), y = unit(1,"npc"),
-                hjust = 1, vjust = 1)
 
 # plot the weevil raw data points with weevil model on top
 p1 <- ggplot() +
@@ -542,7 +515,7 @@ p2 <- ggplot() +
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
   coord_cartesian(ylim = c(8, 11)) +
-  labs(y="Elytron size (mm)", 
+  labs(y="Elytron length (mm)", 
        x = expression(paste("Body δ"^"15"*"N"*" (‰)"))) +
   scale_y_continuous(breaks = c(8,9,10,11), label = c("8","9","10","11")) +
   labs(tag = "B") +
@@ -550,7 +523,6 @@ p2 <- ggplot() +
 
 p1 + p2
 ggsave("FIGURES/fig4.png",  height=6, width=14, dpi = "retina")
-
 
 
 #### 4. BODY SIZE (FULL MODEL) ####
@@ -587,8 +559,10 @@ View(fullbodysizeweevil.subset) #n=1010
 fullbodysizecarabid.subset <- filter(bodysize.data, species %in% c("Pterostichus amethystinus",
                                                                    "Pterostichus crenicollis",
                                                                    "Scaphinotus angusticollis",
-                                                                   "Zacotus matthewsii"))
-fullbodysizesexedcarabid.subset <- filter(fullbodysizecarabid.subset, sex %in% c("F", "M"))
+                                                                   "Zacotus matthewsii")) %>% 
+  droplevels()
+fullbodysizesexedcarabid.subset <- filter(fullbodysizecarabid.subset, sex %in% c("F", "M")) %>% 
+  droplevels()
 View(fullbodysizesexedcarabid.subset) #n=290
 
 # (4a) weevil full bodysize model
@@ -639,26 +613,30 @@ testResiduals(sim)
 # (4a) full coefficient plot for Supplemental 
 #parameters with strong effects in black, parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(fullbodysizeweevilmodel, type = "est", title = "",
+p3 <- plot_model(fullbodysizeweevilmodel, type = "est", title = "",
            group.terms = c(1,2,1,1), 
            order.terms = c(1,4,3,2), 
            colors = c("grey","black"), 
            axis.labels = c("S. carinatus", "Sampling \nWeek", 
                            "Distance * \nS. carinatus", "Distance")) +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+  theme_classic(15) + geom_hline(yintercept = 0, lty = 2, colour = "gray") +
+  labs(tag = "A") +
+  annotation_custom(grob = w) 
 
 # (4a) select coefficient plot for Body Text
 # parameters with strong effects in black, parameters with weak/no effect in grey
 # 'sampling round' and 'species' removed
 library(sjPlot)
-plot_model(fullbodysizeweevilmodel, type = "est", title = "",
+p1 <- plot_model(fullbodysizeweevilmodel, type = "est", title = "",
            group.terms = c(1,1,1), 
            order.terms = c(1,3,2), 
            colors = c("grey"), 
            rm.terms = c("speciesSteremnius carinatus"),
            axis.labels = c("Sampling \nWeek", "Distance * \nS. carinatus", 
                            "Distance")) +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray") 
+  theme_classic(20) + geom_hline(yintercept = 0, lty = 2, colour = "gray") +
+  labs(tag = "A") +
+  annotation_custom(grob = w) 
 
 # (4b) carabid full bodysize model 
 hist(fullbodysizesexedcarabid.subset$median) #check distribution of response 
@@ -715,7 +693,7 @@ testResiduals(sim)
 # (4b) full coefficient plot for Supplemental 
 #parameters with strong effects in black, parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(fullbodysizecarabidmodel, type = "est", title = "",
+p4 <- plot_model(fullbodysizecarabidmodel, type = "est", title = "",
            group.terms = c(1,2,2,2,2,1,1,1,1), 
            order.terms = c(1,7,8,9,6,5,2,3,4), 
            colors = c("grey", "black"), 
@@ -730,12 +708,14 @@ plot_model(fullbodysizecarabidmodel, type = "est", title = "",
                            "Distance * \n S. angusticollis", 
                            "Distance * \n P. crenicollis", 
                            "Distance")) +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
+  theme_classic(15) + geom_hline(yintercept = 0, lty = 2, colour = "gray") +
+  labs(tag = "B") +
+  annotation_custom(grob = c) 
 
 #(4b) select coefficient plot for Body Text 
 #parameters with strong effects in black, parameters with weak/no effect in grey
 library(sjPlot)
-plot_model(fullbodysizecarabidmodel, type = "est", title = "",
+p2 <- plot_model(fullbodysizecarabidmodel, type = "est", title = "",
            group.terms = c(1,2,1,1,1,1), 
            order.terms = c(1,4,5,6,3,2), 
            colors = c("grey", "black"), 
@@ -749,122 +729,136 @@ plot_model(fullbodysizecarabidmodel, type = "est", title = "",
                            "Distance * \n S. angusticollis", 
                            "Distance * \n P. crenicollis", 
                            "Distance")) +
-  theme_classic() + geom_hline(yintercept = 0, lty = 2, colour = "gray")
-
-#----------------------------------------------------------------------------
-## create plots showing the model predictions and raw data
-## create a new data frame to make model predictions
-newdat.4a.wee <- expand.grid(distance.std = with(fullbodysizeweevil.subset, 
-                                                   seq(min(distance.std), max(distance.std), 
-                                                       length.out = 50)),
-                                       species = unique(fullbodysizeweevil.subset$species), 
-                                       round.std = mean(fullbodysizeweevil.subset$round.std))
-#
-#newdat.fullbodysize.car <- expand.grid(distance.std = with(fullbodysizesexedcarabid.subset, 
-#                                                   seq(min(distance.std), max(distance.std), 
-#                                                       length.out = 30)),
-#                                      species = 
-#                                       unique(fullbodysizesexedcarabid.subset$species), 
-#                                       round.std = 
-#                                        mean(fullbodysizesexedcarabid.subset$round.std),
-#                                       sex = unique(fullbodysizesexedcarabid.subset$sex),
-#                                      transect = unique(fullbodysizeweevil.subset$transect))
-#
-#
-#
-## make model predictions with upr/lower confidence intervals for weevil model
-modelexp <- predict(fullbodysizeweevilmodel, 
-                         newdata = newdat.4a.wee,
-                           type = "response", re.form = NA)
-newdat.4a.wee$wee.fit <- modelexp
-
-boot <- bootMer(fullbodysizeweevilmodel, predict, nsim = 100, re.form = NA,
-               type = "parametric")
-std.err <- apply(boot$t, 2, sd)
-newdat.4a.wee$wee.lwr <- newdat.4a.wee$wee.fit - 1.96 * std.err
-newdat.4a.wee$wee.upr <- newdat.4a.wee$wee.fit + 1.96 * std.err
-
-
-
-## make model predictions with upr/lower confidence intervals for carabid model
-#carfullsizemodelexp <- predict(fullbodysizecarabidmodel, #newdata = 
-#                               #newdat.fullbodysize.car, 
-#                               type = "response", 
-#                               se.fit = TRUE, re.form = NA, full = T)
-#newdat.fullbodysize.car$car.fit <- carfullsizemodelexp$fit
-#newdat.fullbodysize.car$car.lwr <- carfullsizemodelexp$fit - 1.96 * 
-#  carfullsizemodelexp$se.fit
-#newdat.fullbodysize.car$car.upr <- carfullsizemodelexp$fit + 1.96 *
-#  carfullsizemodelexp$se.fit
-#
-#
-
-
-#--------------------------------------------
-# Code to display the x-axis unstandardized
-#unstandardize <- function() {
-#function(x) format(x*sd(soiln.data$distance) + mean(soiln.data$distance), digits = 0) 
-#}
-
-# images downloaded under Creative Commons from phylopic.org
-wee.pic <- readPNG("FIGURES/weevil.png") 
-car.pic <- readPNG("FIGURES/carabid.png") 
-
-w <- rasterGrob(wee.pic, interpolate = TRUE, 
-                width=unit(1,'cm'),
-                x = unit(1,"npc"), y = unit(1,"npc"),
-                hjust = 1, vjust = 1)
-
-c <- rasterGrob(car.pic, interpolate = TRUE, 
-                width=unit(1.5,'cm'),
-                x = unit(1,"npc"), y = unit(1,"npc"),
-                hjust = 1, vjust = 1)
-
-# plot the weevil raw data points with weevil model on top
-ggplot() +
-  #add raw data points
-  geom_point(data = fullbodysizeweevil.subset, aes(x = distance.std, y = median), 
-             alpha = 0.6, pch = 16, size = 3, colour = "black") + 
-  theme_classic(30) + 
-  #add weevil model fit
-  geom_line(data = newdat.4a.wee, aes(x = distance.std, y = wee.fit), 
-            size = 1, colour = "black") +
-  #geom_ribbon(data = newdat.4a.wee, aes(x = distance.std, ymin = wee.lwr, 
-                                                    #ymax = wee.upr), 
-             # fill = "black", alpha = 1) +
-  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
-  #coord_cartesian(ylim = c(4, 6)) +
-  labs(y="Elytron length (mm)", 
-       x = expression(paste("Distance from river (m)"))) +
-  #scale_y_continuous(breaks = c(4,5,6), label = c("4","5","6")) +
-  labs(tag = "A") +
-  annotation_custom(grob = w) 
-
-
-# plot the carabid raw data points with carabid model on top
-p2 <- ggplot() +
-  #add raw data points
-  geom_point(data = carabid.subset, aes(x = bodyd15N, y = median), alpha = 0.6, 
-             pch = 16, size = 3, colour = "black") + 
-  theme_classic(30) + 
-  #add carabid model fit
-  geom_line(data = newdat.bodysize.car, aes(x = bodyd15N, y = car.fit), size = 1, 
-            colour = "black") +
-  geom_ribbon(data = newdat.bodysize.car, aes(x = bodyd15N, ymin = car.lwr, ymax = 
-                                                car.upr), fill = "black", alpha = .25) +
-  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
-  coord_cartesian(ylim = c(8, 11)) +
-  labs(y="Elytron size (mm)", 
-       x = expression(paste("Body δ"^"15"*"N"*" (‰)"))) +
-  scale_y_continuous(breaks = c(8,9,10,11), label = c("8","9","10","11")) +
+  theme_classic(20) + geom_hline(yintercept = 0, lty = 2, colour = "gray") +
   labs(tag = "B") +
   annotation_custom(grob = c) 
 
-(p1 | p2)/(p3 | p4)
-ggsave("FIGURES/fig5.png",  height=6, width=14, dpi = "retina")
+p1 + p2
+ggsave("FIGURES/fig5_simplified.png",  height=6, width=14, dpi = "retina")
 
+p3 + p4
+ggsave("FIGURES/fig5_full.png",  height=6, width=14, dpi = "retina")
+
+### create plots showing the model predictions and raw data
+### create a new data frame to make model predictions
+#newdat.4a.wee <- expand.grid(distance.std = with(fullbodysizeweevil.subset, 
+#                                                   seq(min(distance.std), max(distance.std), 
+#                                                       length.out = 1010)),
+#                                       species = c("Steremnius carinatus"),
+#                                                   #"Steremnius tuberosus"), 
+#                                       round.std = mean(fullbodysizeweevil.subset$round.std))
+#
+#newdat.4b.car <- expand.grid(distance.std = with(fullbodysizesexedcarabid.subset, 
+#                                                   seq(min(distance.std), max(distance.std), 
+#                                                       length.out = 290)),
+#                                      species = c("Zacotus matthewsii"),
+#                                       round.std = 
+#                                        mean(fullbodysizesexedcarabid.subset$round.std),
+#                                       sex = c("F"))
+#                                     
+### make model predictions with upr/lower confidence intervals for weevil model
+#modelexp <- predict(fullbodysizeweevilmodel, 
+#                         newdata = newdat.4a.wee,
+#                           type = "response", re.form = NA)
+#newdat.4a.wee$wee.fit <- modelexp
+#
+#boot <- bootMer(fullbodysizeweevilmodel, predict, nsim = 100, re.form = NA,
+#               type = "parametric", seed = 101)
+#std.err <- apply(boot$t, 2, sd)
+#newdat.4a.wee$wee.lwr <- newdat.4a.wee$wee.fit - 1.96 * std.err
+#newdat.4a.wee$wee.upr <- newdat.4a.wee$wee.fit + 1.96 * std.err
+#
+### make model predictions with upr/lower confidence intervals for carabid model
+#modelexp <- predict(fullbodysizecarabidmodel, 
+#                    newdata = newdat.4b.car,
+#                    type = "response", re.form = NA)
+#newdat.4b.car$car.fit <- modelexp
+#
+#boot <- bootMer(fullbodysizecarabidmodel, predict, nsim = 10000, re.form = NA,
+#                type = "parametric")
+#std.err <- apply(boot$t, 2, sd)
+#newdat.4b.car$car.lwr <- newdat.4b.car$car.fit - 1.96 * std.err
+#newdat.4b.car$car.upr <- newdat.4b.car$car.fit + 1.96 * std.err
+#
+#
+
+#
+## plot the weevil raw data points with weevil model on top
+#ggplot() +
+#  #add raw data points
+#  geom_jitter(data = fullbodysizeweevil.subset, aes(x = distance.std, y = median), 
+#             alpha = 0.6, pch = 16, size = 3, colour = "black", width = 0.1) + 
+#  theme_classic(30) + 
+#  #add weevil model fit
+#  geom_line(data = newdat.4a.wee, aes(x = distance.std, y = wee.fit), 
+#            size = 1, colour = "black") +
+#  geom_ribbon(data = newdat.4a.wee, aes(x = distance.std, ymin = wee.lwr, 
+#                                                    ymax = wee.upr), 
+#             fill = "black", alpha = 0.25) +
+#  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+#  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+#  #coord_cartesian(ylim = c(4, 6)) +
+#  labs(y="Elytron length (mm)", 
+#       x = expression(paste("Distance from river (m)"))) +
+#  scale_x_continuous(breaks = c(-1.2247, 0, 1.2247), label = c("0", "25", "50")) +
+#  #scale_y_continuous(breaks = c(4,5,6), label = c("4","5","6")) +
+#  labs(tag = "A") +
+#  annotation_custom(grob = w) 
+#
+## plot the weevil raw data points against distance
+#data_summary <- function(x) {
+#  m <- mean(x)
+#  ymin <- m-(1.96*plotrix::std.error(x))
+#  ymax <- m+(1.96*plotrix::std.error(x))
+#  return(c(y=m,ymin=ymin,ymax=ymax)) }
+#
+#ggplot() +
+#  #add raw data points
+#  geom_jitter(data = fullbodysizeweevil.subset, aes(x = distance, y = median), 
+#              alpha = 0.6, pch = 16, size = 3, colour = "black", width = 1.5) + 
+#  theme_classic(30) + 
+#  #add weevil model fit
+#  #geom_line(data = newdat.4a.wee, aes(x = distance.std, y = wee.fit), 
+#            #size = 1, colour = "black") +
+#  #geom_ribbon(data = newdat.4a.wee, aes(x = distance.std, ymin = wee.lwr, 
+#                                        #ymax = wee.upr), 
+#              #fill = "black", alpha = 0.25) +
+#  #stat_smooth(data = fullbodysizeweevil.subset, aes(x = distance, y = median),
+#              #method = lm) +
+#  #geom_errorbar(data = fullbodysizeweevil.subset, aes(x = distance, y = median) +
+#  stat_summary(data = fullbodysizeweevil.subset, aes(x = distance, y = median),
+#    fun.data=data_summary, color="red", size = 0.5) +
+#  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+#  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+#  #coord_cartesian(ylim = c(4, 6)) +
+#  labs(y="Elytron length (mm)", 
+#       x = expression(paste("Distance from river (m)"))) +
+#  scale_x_continuous(breaks = c(0, 25, 50), label = c("0", "25", "50")) +
+#  #scale_y_continuous(breaks = c(4,5,6), label = c("4","5","6")) +
+#  labs(tag = "A") +
+#  annotation_custom(grob = w) 
+#
+## plot the carabid raw data points with carabid model on top
+#ggplot() +
+#  #add raw data points
+#  geom_jitter(data = fullbodysizesexedcarabid.subset, aes(x = distance.std, 
+#                                                         y = median), 
+#             alpha = 0.6, pch = 16, size = 3, colour = "black", width = 0.1) + 
+#  theme_classic(30) + 
+#  #add carabid model fit
+#  geom_line(data = newdat.4b.car, aes(x = distance.std, y = car.fit), size = 1, 
+#            colour = "black") +
+#  geom_ribbon(data = newdat.4b.car, aes(x = distance.std, ymin = car.lwr, ymax = 
+#                                                car.upr), fill = "black", alpha = .25) +
+#  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+#  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+#  #coord_cartesian(ylim = c(4, 6)) +
+#  labs(y="Elytron length (mm)", 
+#       x = expression(paste("Distance from river (m)"))) +
+#  #scale_y_continuous(breaks = c(4,5,6), label = c("4","5","6")) +
+#  scale_x_continuous(breaks = c(-1.2247, 0, 1.2247), label = c("0", "25", "50")) +
+#  labs(tag = "B") +
+#  annotation_custom(grob = c) 
 
 #### 5. POST HOC (SIA) ####
 
@@ -986,20 +980,6 @@ weepostmodelexp <- predict(weevilposthocmodel, newdat.post.wee, type = "response
 newdat.post.wee$wee.fit <- weepostmodelexp$fit
 newdat.post.wee$wee.lwr <- weepostmodelexp$fit - 1.96 * weepostmodelexp$se.fit
 newdat.post.wee$wee.upr <- weepostmodelexp$fit + 1.96 * weepostmodelexp$se.fit
-
-# images downloaded under Creative Commons from phylopic.org
-wee.pic <- readPNG("FIGURES/weevil.png") 
-car.pic <- readPNG("FIGURES/carabid.png") 
-
-w <- rasterGrob(wee.pic, interpolate = TRUE, 
-                width=unit(1,'cm'),
-                x = unit(1,"npc"), y = unit(1,"npc"),
-                hjust = 1, vjust = 1)
-
-c <- rasterGrob(car.pic, interpolate = TRUE, 
-                width=unit(1.5,'cm'),
-                x = unit(1,"npc"), y = unit(1,"npc"),
-                hjust = 1, vjust = 1)
 
 # plot the weevil raw data points with weevil model on top
 p1 <- ggplot() +
