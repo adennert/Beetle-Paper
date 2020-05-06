@@ -1,8 +1,11 @@
-####R Script for Beetle Paper
-####Originally written in fall 2018 by NR; updated in spring 2020 by NR and AD
-####For submission to Ecology & Evolution
+#### R Script for Beetle Paper
+# "The effects of spawning Pacific salmon (Oncorynchus spp.) on terrestrial 
+# invertebrates: Insects near spawning habitat are isotopically enriched with 
+# nitrogen but display no differences in body condition
+#### Originally written in fall 2018 by NR; updated in spring 2020 by NR and AD
+#### Last update: 6 May 2020
 
-#### Library Loading & Set-up ####
+#### 00. LIBRARY LOADING & SET-UP ####
 
 #install.packages("datasets")
 library(datasets)
@@ -34,8 +37,8 @@ library(grid)
 #install.packages("dplyr")
 library(dplyr)
 
-## load figure silohouettes of weevils and carabids
-## images downloaded under Creative Commons from phylopic.org
+# load figure silohouettes of weevils and carabids
+# images downloaded under Creative Commons from phylopic.org
 wee.pic <- readPNG("FIGURES/weevil.png") 
 car.pic <- readPNG("FIGURES/carabid.png") 
 
@@ -50,9 +53,11 @@ c <- rasterGrob(car.pic, interpolate = TRUE,
                 hjust = 1, vjust = 1)
 
 #### 0. REPEATABILITY ####
-# dataset
-repeat.data <- read.csv("DATA/(0) repeat.csv", header = TRUE, ",", strip.white = TRUE)
-View(repeat.data)
+# load dataset
+repeat.data <- read.csv("DATA/(0) repeat.csv", header = TRUE, ",", 
+                        strip.white = TRUE)
+
+# ensure that variable types are correct
 str(repeat.data)
 summary(repeat.data)
 names(repeat.data)
@@ -72,16 +77,17 @@ qqline(as.vector(resid(repeatmodel)), col = "blue")
 
 # calculate repeatability factor (use VarCorr to extract variance components)
 VarCorr(repeatmodel)
-# R  = (2.099381)^2 / ((2.099381^2) + (0.051741^2))
-#    = 0.99939295
-#    Repeatability factor (R) is 0.99 so very high repeatability
-#    (very low within group variation compared to b/w group variation)
+  # R  = (2.099381)^2 / ((2.099381^2) + (0.051741^2))
+  #    = 0.99939295
+  #    Repeatability factor (R) is 0.99 so very high repeatability
+  #    (very low within group variation compared to between group variation)
 
 #### 1. SOIL NUTRIENTS ####
 
-# dataset
+# load dataset
 soiln.data <- read.csv("DATA/(1) soiln.csv", header = TRUE, ",", strip.white = TRUE)
-View(soiln.data)
+
+# ensure variable types are correct
 str(soiln.data) #check that distance is an integer
 levels(soiln.data$transect) #check levels of categorical variable
 summary(soiln.data)
@@ -93,19 +99,23 @@ ggplot(soiln.data, aes(distance, soild15N)) +
   geom_point() + theme_classic() + 
   theme(text = element_text(size = 16)) +
   theme(axis.text.x = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
-  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, 
+                                                    l = 0))) +
   theme(axis.text.y = element_text(size = 16, hjust = 0.5, vjust = 0.5)) +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, 
+                                                    l = 0))) +
   coord_cartesian(ylim = c(0, 12)) +
   labs(x="Distance from the Kunsoot River (m)", 
        y = expression(paste("Soil δ"^"15"*"N"*" (‰)")))
 
 # (1) soil model
 # cannot include random effect of transect due to singularity issues
-# must standardize these variables as they are both continuous with differing
+# standardize these variables as they are both continuous with differing
 # variance, range, and units
-soiln.data$distance.std <- c(scale(soiln.data$distance, center = TRUE, scale = TRUE))
-soiln.data$moisture.std <- c(scale(soiln.data$moisture, center = TRUE, scale = TRUE))
+soiln.data$distance.std <- c(scale(soiln.data$distance, center = TRUE, 
+                                   scale = TRUE))
+soiln.data$moisture.std <- c(scale(soiln.data$moisture, center = TRUE, 
+                                   scale = TRUE))
 
 # create the standardized soil model
 soilnmodel <- lm(soild15N ~ distance.std * moisture.std, data = soiln.data)
@@ -113,7 +123,7 @@ summary(soilnmodel)
 
 # check for correlation between distance and moisture
 cor(soiln.data$distance, soiln.data$moisture, method = c("pearson"))
-# Pearson's correlation coefficient: r = -0.006, where 0 means there is no association.
+# Pearson's correlation coefficient: r = -0.006, where 0 means no association
 
 # check residuals
 ggplot(soiln.data, aes(x = fitted(soilnmodel), y = resid(soilnmodel))) +
@@ -124,7 +134,7 @@ ggplot(soiln.data, aes(x = fitted(soilnmodel), y = resid(soilnmodel))) +
 qqnorm(as.vector(resid(soilnmodel)))
 qqline(as.vector(resid(soilnmodel)), col = "blue")
 
-##USING DHARMa PACKAGE TO INTERPRET RESIDUALS (March 2020):
+## USING DHARMa PACKAGE TO INTERPRET RESIDUALS (March 2020):
 # set simulations constant 
 set.seed(1)
 # calculate scaled residuals
@@ -134,15 +144,7 @@ sim <- simulateResiduals(fittedModel = soilnmodel, n = 500)
 # plot residuals against the other predictors
 plotResiduals(soiln.data$distance.std, sim$scaledResiduals)
 plotResiduals(soiln.data$moisture.std, sim$scaledResiduals)
-# plot the scaled residuals (Observed vs Expected)
-plot(sim)
-# plot residuals against the other predictors
-plotResiduals(carabid.subset$distance, sim$scaledResiduals) 
-# test outliers
-testOutliers(sim)
-# test dispersion 
-testDispersion(sim)
-# shows QQ plot, dispersion, outliers in 1 plot
+# shows QQ plot, dispersion test, outliers in 1 plot
 testResiduals(sim)
 
 # soil model coefficient plot with parameters with strong effects in black, 
@@ -165,7 +167,6 @@ modelexp <- predict(soilnmodel, newdat.soil, type = "response",
 newdat.soil$fit <- modelexp$fit
 newdat.soil$lwr <- modelexp$fit - 1.96 * modelexp$se.fit
 newdat.soil$upr <- modelexp$fit + 1.96 * modelexp$se.fit
-
 
 # plot the raw data points with model on top
 # note that moisture is displayed held at its mean
@@ -190,27 +191,23 @@ p2 <- ggplot() +
 p2 + p1
 ggsave("FIGURES/fig2.png",  height=6, width=14, dpi = "retina")
 
-
 #### 2. BODY N (SIA) ####
 
-# dataset
+# load dataset
 sia.data <- read.csv("DATA/(2) sia.csv", header = TRUE, ",", strip.white = TRUE)
-View(sia.data)
+
+# ensure that variable types are correct
 str(sia.data) 
 summary(sia.data)
 names(sia.data)
 
-# subsets
+# make subsets of the data for each beetle family
 library(dplyr)
 weevil.subset <- sia.data %>% filter(trophic == "Curculionidae")
-View(weevil.subset)
 carabid.subset <- sia.data %>% filter(trophic == "Carabidae")
-View(carabid.subset)
 
 # visualize raw data 
 library(ggplot2)
-
-str(sia.data)
 ggplot(sia.data, aes(as.factor(distance), bodyd15N, fill = species)) +
   stat_boxplot() + theme_classic() +
   theme(text = element_text(size = 16)) +
@@ -228,7 +225,7 @@ ggplot(sia.data, aes(as.factor(distance), bodyd15N, fill = species)) +
 # (2a) weevil body N model - using weevil.subset
 hist(weevil.subset$bodyd15N) #check distribution of response
 levels(weevil.subset$trophic) #check levels of categorical variables
-weevil.subset$distance <- as.integer(weevil.subset$distance) #make distance an integer 
+weevil.subset$distance <- as.integer(weevil.subset$distance) #distance an integer 
 str(weevil.subset)
 weevilbodynmodel <- lm(bodyd15N ~ distance, data = weevil.subset)
 summary(weevilbodynmodel)
@@ -247,22 +244,17 @@ qqline(as.vector(resid(weevilbodynmodel)), col = "blue")
 set.seed(1)
 # calculate scaled residuals
 library(DHARMa)
-sim <- simulateResiduals(fittedModel = weevilbodynmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
-# plot the scaled residuals (Observed vs Expected)
-plot(sim)
+sim <- simulateResiduals(fittedModel = weevilbodynmodel, n = 500) 
+# the calculated residuals are stored in sim$scaledResiduals
 # plot residuals against the other predictors
 plotResiduals(weevil.subset$distance, sim$scaledResiduals) 
-# test outliers
-testOutliers(sim)
-# test dispersion 
-testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
 # (2b) carabid body N model - using carabid.subset
 hist(carabid.subset$bodyd15N) #check distribution of response
 levels(carabid.subset$trophic) #check levels of categorical variables
-carabid.subset$distance <- as.integer(carabid.subset$distance) #make distance an integer 
+carabid.subset$distance <- as.integer(carabid.subset$distance) #distance an integer 
 str(carabid.subset)
 carabidbodynmodel <- lm(bodyd15N ~ distance, data = carabid.subset)
 summary(carabidbodynmodel)
@@ -281,15 +273,10 @@ qqline(as.vector(resid(carabidbodynmodel)), col = "blue")
 set.seed(1)
 # calculate scaled residuals
 library(DHARMa)
-sim <- simulateResiduals(fittedModel = carabidbodynmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
-# plot the scaled residuals (Observed vs Expected)
-plot(sim)
+sim <- simulateResiduals(fittedModel = carabidbodynmodel, n = 500) 
+# the calculated residuals are stored in sim$scaledResiduals
 # plot residuals against the other predictors
 plotResiduals(carabid.subset$distance, sim$scaledResiduals) 
-# test outliers
-testOutliers(sim)
-# test dispersion 
-testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
@@ -360,19 +347,18 @@ ggsave("FIGURES/fig3.png",  height=6, width=14, dpi = "retina")
 
 #### 3. BODY SIZE (SIA) ####
 
-# dataset
+# load dataset
 sia.data <- read.csv("DATA/(2) sia.csv", header = TRUE, ",", strip.white = TRUE)
-View(sia.data)
+
+# ensure that variable types are correct
 str(sia.data) 
 summary(sia.data)
 names(sia.data)
 
-# subsets
+# make subsets of the data for each beetle family
 library(dplyr)
 weevil.subset <- sia.data %>% filter(trophic == "Curculionidae")
-View(weevil.subset)
 carabid.subset <- sia.data %>% filter(trophic == "Carabidae")
-View(carabid.subset)
 
 #visualize all raw data
 library(ggplot2)
@@ -412,14 +398,8 @@ set.seed(1)
 library(DHARMa)
 sim <- simulateResiduals(fittedModel = weevilbodysizemodel, n = 500) 
 # the calculated residuals are stored in sim$scaledResiduals
-# plot the scaled residuals (Observed vs Expected)
-plot(sim)
 # plot residuals against the other predictors
 plotResiduals(weevil.subset$bodyd15N, sim$scaledResiduals) 
-# test outliers
-testOutliers(sim)
-# test dispersion 
-testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
@@ -445,17 +425,10 @@ set.seed(1)
 library(DHARMa)
 sim <- simulateResiduals(fittedModel = carabidbodysizemodel, n = 500) 
 # the calculated residuals are stored in sim$scaledResiduals
-# plot the scaled residuals (Observed vs Expected)
-plot(sim)
 # plot residuals against the other predictors
 plotResiduals(carabid.subset$bodyd15N, sim$scaledResiduals) 
-# test outliers
-testOutliers(sim)
-# test dispersion 
-testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
-
 
 # create plots showing the model predictions and raw data
 # create a new data frame to make model predictions
@@ -527,43 +500,45 @@ ggsave("FIGURES/fig4.png",  height=6, width=14, dpi = "retina")
 
 #### 4. BODY SIZE (FULL MODEL) ####
 
-# dataset 
-bodysize.data <- read.csv("DATA/(3) bodysize.csv", header = TRUE, ",", strip.white = TRUE)
-View(bodysize.data)
+# load dataset 
+bodysize.data <- read.csv("DATA/(3) bodysize.csv", header = TRUE, ",", 
+                          strip.white = TRUE)
+
+# ensure variable types are correct
 str(bodysize.data) 
 summary(bodysize.data)
 names(bodysize.data)
 
 # must standardize sampling round and distance variables as they are both 
-#continuous with differing variance, range, and units
+# continuous with differing variance, range, and units
 bodysize.data$distance.std <- c(scale(bodysize.data$distance, center = TRUE, 
                                       scale = TRUE))
 bodysize.data$round.std <- c(scale(bodysize.data$round, center = TRUE, 
                                       scale = TRUE))
 str(bodysize.data)
 
-# subsets
+# make subsets of the data for each beetle family
 library(dplyr)
-#weevil subset:
-#create a subset that includes all weevils EXCEPT N. incomptus (n=1) 
+# weevil subset:
+# create a subset that includes all weevils EXCEPT N. incomptus (n=1) 
 # because insuffient sample size to estimate model parameters for this species
-fullbodysizeweevil.subset <- filter(bodysize.data, species %in% c("Steremnius tuberosus", 
-                                              "Steremnius carinatus")) %>% 
-  droplevels()
-View(fullbodysizeweevil.subset) #n=1010
+fullbodysizeweevil.subset <- filter(bodysize.data, species %in% 
+                                      c("Steremnius tuberosus", 
+                                              "Steremnius carinatus"))
+      # n = 1010
 
-#carabid subset:
-#create a subset that includes all SEXED carabids 
+# carabid subset:
+# create a subset that includes all SEXED carabids 
 # (EXCEPT L. ferruginosus (n=2) and C. tuberculatus (n=3))
 # because insuffient sample size to estimate model parameters for this species
-fullbodysizecarabid.subset <- filter(bodysize.data, species %in% c("Pterostichus amethystinus",
-                                                                   "Pterostichus crenicollis",
-                                                                   "Scaphinotus angusticollis",
-                                                                   "Zacotus matthewsii")) %>% 
-  droplevels()
-fullbodysizesexedcarabid.subset <- filter(fullbodysizecarabid.subset, sex %in% c("F", "M")) %>% 
-  droplevels()
-View(fullbodysizesexedcarabid.subset) #n=290
+fullbodysizecarabid.subset <- filter(bodysize.data, species %in% 
+                                       c("Pterostichus amethystinus",
+                                         "Pterostichus crenicollis",
+                                         "Scaphinotus angusticollis",
+                                         "Zacotus matthewsii")) 
+fullbodysizesexedcarabid.subset <- filter(fullbodysizecarabid.subset, 
+                                          sex %in% c("F", "M"))
+      # n = 290
 
 # (4a) weevil full bodysize model
 hist(fullbodysizeweevil.subset$median) #check distribution of response 
@@ -597,16 +572,10 @@ set.seed(1)
 library(DHARMa)
 sim <- simulateResiduals(fittedModel = fullbodysizeweevilmodel, n = 500) 
 # the calculated residuals are stored in sim$scaledResiduals
-# plot the scaled residuals (Observed vs Expected)
-plot(sim)
 # plot residuals against the other predictors
 plotResiduals(fullbodysizeweevil.subset$distance.std, sim$scaledResiduals) 
 plotResiduals(fullbodysizeweevil.subset$species, sim$scaledResiduals) 
 plotResiduals(fullbodysizeweevil.subset$round.std, sim$scaledResiduals)
-# test outliers
-testOutliers(sim)
-# test dispersion 
-testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
@@ -640,16 +609,19 @@ p1 <- plot_model(fullbodysizeweevilmodel, type = "est", title = "",
 
 # (4b) carabid full bodysize model 
 hist(fullbodysizesexedcarabid.subset$median) #check distribution of response 
-levels(fullbodysizesexedcarabid.subset$sex) #check levels of categorical variables
-levels(fullbodysizesexedcarabid.subset$species) #check levels of categorical variables
+levels(fullbodysizesexedcarabid.subset$sex) #check levels of categorical vars
+levels(fullbodysizesexedcarabid.subset$species) #check levels of categorical vars
 
-levels(fullbodysizesexedcarabid.subset[,"species"]) #make P. amethystinus first (intercept) 
+# make species = P. amethystinus first (intercept) 
+levels(fullbodysizesexedcarabid.subset[,"species"]) 
 fullbodysizesexedcarabid.subset$species <- 
   relevel(fullbodysizesexedcarabid.subset$species, "Pterostichus amethystinus")
 
-levels(fullbodysizesexedcarabid.subset[, "sex"]) # make F first (intercept)
-fullbodysizesexedcarabid.subset$sex = factor(fullbodysizesexedcarabid.subset$sex, 
-                                             levels(fullbodysizesexedcarabid.subset$sex)[c(1,2)])
+# make sex = F first (intercept)
+levels(fullbodysizesexedcarabid.subset[, "sex"]) 
+fullbodysizesexedcarabid.subset$sex = 
+  factor(fullbodysizesexedcarabid.subset$sex, 
+         levels(fullbodysizesexedcarabid.subset$sex)[c(1,2)])
 str(fullbodysizesexedcarabid.subset) 
 #make 'round' an integer - but note not important as a factor either
 fullbodysizecarabid.subset$round <- as.integer(fullbodysizecarabid.subset$round)  
@@ -676,17 +648,11 @@ set.seed(1)
 library(DHARMa)
 sim <- simulateResiduals(fittedModel = fullbodysizecarabidmodel, n = 500) 
 # the calculated residuals are stored in sim$scaledResiduals
-# plot the scaled residuals (Observed vs Expected)
-plot(sim)
 # plot residuals against the other predictors
 plotResiduals(fullbodysizesexedcarabid.subset$distance.std, sim$scaledResiduals) 
 plotResiduals(fullbodysizesexedcarabid.subset$species, sim$scaledResiduals) 
 plotResiduals(fullbodysizesexedcarabid.subset$sex, sim$scaledResiduals)
 plotResiduals(fullbodysizesexedcarabid.subset$round.std, sim$scaledResiduals)
-# test outliers
-testOutliers(sim)
-# test dispersion 
-testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
@@ -733,12 +699,16 @@ p2 <- plot_model(fullbodysizecarabidmodel, type = "est", title = "",
   labs(tag = "B") +
   annotation_custom(grob = c) 
 
+# make figure with simplified coefficient plots
 p1 + p2
 ggsave("FIGURES/fig5_simplified.png",  height=6, width=14, dpi = "retina")
 
+# make figure with coefficient plots with all variables and their categories
 p3 + p4
 ggsave("FIGURES/fig5_full.png",  height=6, width=14, dpi = "retina")
 
+
+####PLOTS SHOWING 4a and 4b raw data with model fit: HASHED OUT, TO REMOVE?####
 ### create plots showing the model predictions and raw data
 ### create a new data frame to make model predictions
 #newdat.4a.wee <- expand.grid(distance.std = with(fullbodysizeweevil.subset, 
@@ -862,19 +832,18 @@ ggsave("FIGURES/fig5_full.png",  height=6, width=14, dpi = "retina")
 
 #### 5. POST HOC (SIA) ####
 
-# dataset
+# load dataset
 sia.data <- read.csv("DATA/(2) sia.csv", header = TRUE, ",", strip.white = TRUE)
-View(sia.data)
+
+# ensure that variable types are correct
 str(sia.data) 
 summary(sia.data)
 names(sia.data)
 
-# subsets
+# # make subsets of the data for each beetle family
 library(dplyr)
 weevil.subset <- sia.data %>% filter(trophic == "Curculionidae")
-View(weevil.subset)
 carabid.subset <- sia.data %>% filter(trophic == "Carabidae")
-View(carabid.subset)
 
 # visualize raw data
 library(ggplot2)
@@ -899,7 +868,8 @@ weevilposthocmodel <- lm(bodyncombust ~ bodyd15N, data = weevil.subset)
 summary(weevilposthocmodel)
 
 # check residuals
-ggplot(weevil.subset, aes(x = fitted(weevilposthocmodel), y = resid(weevilposthocmodel))) +
+ggplot(weevil.subset, aes(x = fitted(weevilposthocmodel), 
+                          y = resid(weevilposthocmodel))) +
   geom_point() +
   theme_classic() +
   geom_line(y=0, colour="red") +
@@ -912,18 +882,12 @@ qqline(as.vector(resid(weevilposthocmodel)), col = "blue")
 set.seed(1)
 # calculate scaled residuals
 library(DHARMa)
-sim <- simulateResiduals(fittedModel = weevilposthocmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
-# plot the scaled residuals (Observed vs Expected)
-plot(sim)
+sim <- simulateResiduals(fittedModel = weevilposthocmodel, n = 500) 
+# the calculated residuals are stored in sim$scaledResiduals
 # plot residuals against the other predictors
 plotResiduals(weevil.subset$bodyd15N, sim$scaledResiduals) 
-# test outliers
-testOutliers(sim)
-# test dispersion 
-testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
-
 
 # (5b) carabid post hoc model
 hist(carabid.subset$bodyncombust) #check distribution of response
@@ -932,7 +896,8 @@ carabidposthocmodel <- lm(bodyncombust ~ bodyd15N, data = carabid.subset)
 summary(carabidposthocmodel)
 
 # check residuals
-ggplot(carabid.subset, aes(x = fitted(carabidposthocmodel), y = resid(carabidposthocmodel))) +
+ggplot(carabid.subset, aes(x = fitted(carabidposthocmodel), 
+                           y = resid(carabidposthocmodel))) +
   geom_point() +
   theme_classic() +
   geom_line(y=0, colour="red") +
@@ -945,15 +910,10 @@ qqline(as.vector(resid(carabidposthocmodel)), col = "blue")
 set.seed(1)
 # calculate scaled residuals
 library(DHARMa)
-sim <- simulateResiduals(fittedModel = carabidposthocmodel, n = 500) # the calculated residuals are stored in sim$scaledResiduals
-# plot the scaled residuals (Observed vs Expected)
-plot(sim)
+sim <- simulateResiduals(fittedModel = carabidposthocmodel, n = 500) 
+# the calculated residuals are stored in sim$scaledResiduals
 # plot residuals against the other predictors
 plotResiduals(carabid.subset$bodyd15N, sim$scaledResiduals) 
-# test outliers
-testOutliers(sim)
-# test dispersion 
-testDispersion(sim)
 # shows QQ plot, dispersion, outliers in 1 plot
 testResiduals(sim)
 
